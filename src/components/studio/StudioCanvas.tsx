@@ -5,7 +5,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { CameraControls, PerformanceMonitor, useProgress } from "@react-three/drei";
 import { CarModel, defaultRig, type CarRig } from "@/three/CarModel";
-import { Effects, Stage } from "@/three/Stage";
+import { Effects, PHOTO, Stage } from "@/three/Stage";
 import { vltToDark } from "@/three/materials";
 import { carById } from "@/data/cars";
 import { paintById } from "@/data/paints";
@@ -41,9 +41,9 @@ function RigSync({ rig }: { rig: React.RefObject<CarRig> }) {
       r.wsStrip = s.windshield === "strip" ? 1 : 0;
       r.testStrip = s.testStrip ? 1 : 0;
       r.ceramic = s.ceramic > 0 ? 0.55 + s.ceramic / 16 : 0;
-      const outdoors = s.scene === "architecture" || s.scene === "track" || s.scene === "driveway";
-      r.drl = outdoors ? 0.7 : 1;
-      r.tail = outdoors ? 0.8 : 1;
+      const lit = s.scene === "night" || s.scene === "studio";
+      r.drl = lit ? 1 : 0.7;
+      r.tail = lit ? 1 : 0.35;
       r.reveal = 1;
       r.split = s.compare ? s.split * widthRef.current : -1;
       r.sweepAt = s.sweepAt;
@@ -127,6 +127,20 @@ export function StudioLoader({ ready }: { ready: boolean }) {
   );
 }
 
+/** While a new background streams in, the car stays put and a small chip reports progress. */
+function SceneLoading({ ready }: { ready: boolean }) {
+  const { active, progress } = useProgress();
+  const scene = useStudio((s) => s.scene);
+  const cfg = PHOTO[scene];
+  if (!ready || !active || !cfg) return null;
+  return (
+    <div className="glass pointer-events-none absolute left-1/2 top-6 z-20 flex -translate-x-1/2 items-center gap-3 rounded-full px-4 py-2 text-[13px] font-medium text-white" role="status">
+      <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+      Loading {cfg.label} · {Math.round(progress)}%
+    </div>
+  );
+}
+
 export default function StudioCanvas() {
   const carId = useStudio((s) => s.car);
   const scene = useStudio((s) => s.scene);
@@ -151,13 +165,14 @@ export default function StudioCanvas() {
           <Stage scene={scene} quality={quality} />
           <CarModel key={spec.id} spec={spec} rig={rig} />
           <CoveragePins spec={spec} />
-          <Effects quality={quality} bloom={scene === "night" ? 0.75 : scene === "studio" || scene === "bay" ? 0.3 : 0.22} />
+          <Effects quality={quality} bloom={scene === "night" ? 0.75 : scene === "studio" ? 0.3 : 0.2} />
           <ReadySignal onReady={() => setReady(true)} />
         </Suspense>
         <RigSync rig={rig} />
         <CameraRig />
       </Canvas>
       <StudioLoader ready={ready} />
+      <SceneLoading ready={ready} />
     </div>
   );
 }

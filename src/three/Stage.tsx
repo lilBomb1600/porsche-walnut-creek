@@ -1,36 +1,157 @@
 "use client";
 
 import * as THREE from "three";
-import { useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { Suspense, useEffect, useMemo, useRef } from "react";
+import { useFrame, useLoader, useThree } from "@react-three/fiber";
+import { GroundedSkybox } from "three/examples/jsm/objects/GroundedSkybox.js";
+import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
 import { ContactShadows, Environment, Lightformer, MeshReflectorMaterial } from "@react-three/drei";
 import { Bloom, EffectComposer, N8AO, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 
-export type SceneId = "architecture" | "track" | "servicebay" | "driveway" | "studio" | "bay" | "night";
+export type SceneId = "road" | "warehouse" | "hangar" | "studio" | "night";
 
 export const sceneList: { id: SceneId; name: string; note: string }[] = [
-  { id: "architecture", name: "Architecture", note: "Concrete plaza, glass and columns" },
-  { id: "track", name: "Race track", note: "Afternoon sun on the pit straight" },
-  { id: "servicebay", name: "Service bay", note: "A real workshop, lift and all" },
-  { id: "driveway", name: "Home driveway", note: "Golden hour, where it'll live" },
+  { id: "road", name: "Country road", note: "Open fields, afternoon sun" },
+  { id: "warehouse", name: "Warehouse", note: "Concrete hall under skylights" },
+  { id: "hangar", name: "Aircraft hangar", note: "A giant arch opening onto daylight" },
   { id: "studio", name: "Studio", note: "Grey cyclorama, softbox reflections" },
-  { id: "bay", name: "Detail bay", note: "Hex LED ceiling, where film goes on" },
   { id: "night", name: "Night drive", note: "City light streaming over the paint" },
 ];
 
-/** Photographic 360° environments the car sits inside: real ground under the tires, real reflections in the paint. */
-const PHOTO: Partial<Record<SceneId, { file: string; height: number; radius: number; scale: number; intensity: number; rotation?: number }>> = {
-  architecture: { file: "/hdri/modern_buildings_2_2k.hdr", height: 2.2, radius: 60, scale: 220, intensity: 1, rotation: 0.6 },
-  track: { file: "/hdri/zwartkops_straight_afternoon_2k.hdr", height: 1.9, radius: 90, scale: 260, intensity: 0.95, rotation: 1.2 },
-  servicebay: { file: "/hdri/autoshop_01_2k.hdr", height: 2.6, radius: 40, scale: 200, intensity: 1.1, rotation: 0 },
-  driveway: { file: "/hdri/suburban_parking_area_2k.hdr", height: 1.9, radius: 60, scale: 220, intensity: 1, rotation: 2.4 },
+/**
+ * Photographic scenes. The visible background is the untouched 8k photo (4k on phones), ground-projected so the
+ * car stands on the real floor. A small HDR of the same place lights the car and fills its reflections, and a
+ * sun is placed at the HDR's brightest point so shadows fall the way the photo says they should.
+ */
+type PhotoCfg = { bg: string; hdr: string; height: number; radius: number; env: number; soft: number; sun: number; shadow: number; label: string; mb: number; rot: number };
+export const PHOTO: Partial<Record<SceneId, PhotoCfg>> = {
+  warehouse: { bg: "/scenes/warehouse", hdr: "/scenes/warehouse-1k.hdr", height: 2.6, radius: 70, env: 1.15, soft: 1.0, sun: 1.3, shadow: 0.42, label: "Warehouse", mb: 4, rot: 0 },
+  road: { bg: "/scenes/road", hdr: "/scenes/road-1k.hdr", height: 1.75, radius: 110, env: 0.85, soft: 0.5, sun: 2.4, shadow: 0.55, label: "Country road", mb: 39, rot: -Math.PI / 2 },
+  hangar: { bg: "/scenes/hangar", hdr: "/scenes/hangar-1k.hdr", height: 2.4, radius: 90, env: 1.0, soft: 0.9, sun: 1.4, shadow: 0.45, label: "Aircraft hangar", mb: 47, rot: 0.9 },
 };
+
+function useBigTextures() {
+  const gl = useThree((st) => st.gl);
+  return useMemo(() => {
+    if (typeof window === "undefined") return false;
+    const phone = window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
+    return !phone && gl.capabilities.maxTextureSize >= 8192;
+  }, [gl]);
+}
+
+function PhotoBackdrop({ cfg }: { cfg: PhotoCfg }) {
+  const gl = useThree((st) => st.gl);
+  const big = useBigTextures();
+  // the 4k photo arrives fast; on capable screens the untouched 8k original replaces it once it has streamed in
+  const tex = useLoader(THREE.TextureLoader, `${cfg.bg}-4k.jpg`);
+  const sky = useMemo(() => {
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = gl.capabilities.getMaxAnisotropy();
+    tex.needsUpdate = true;
+    const m = new GroundedSkybox(tex, cfg.height, cfg.radius, 160);
+    m.position.y = cfg.height - 0.01;
+    m.rotation.y = cfg.rot;
+    m.renderOrder = -1;
+    (m.material as THREE.MeshBasicMaterial).toneMapped = false;
+    return m;
+  }, [tex, cfg, gl]);
+  useEffect(() => {
+    if (!big) return;
+    let cancelled = false;
+    let hi: THREE.Texture | null = null;
+    new THREE.TextureLoader().load(`${cfg.bg}-8k.jpg`, (t) => {
+      if (cancelled) return t.dispose();
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = gl.capabilities.getMaxAnisotropy();
+      const mat = sky.material as THREE.MeshBasicMaterial;
+      mat.map = t;
+      mat.needsUpdate = true;
+      hi = t;
+    });
+    return () => {
+      cancelled = true;
+      hi?.dispose();
+    };
+  }, [big, cfg.bg, sky, gl]);
+  useEffect(() => () => sky.geometry.dispose(), [sky]);
+  return <primitive object={sky} />;
+}
+
+/** Brightest pixel of the HDR, as a world direction (equirect, three's convention). */
+function sunDirection(tex: THREE.DataTexture) {
+  const { data, width: w, height: h } = tex.image as unknown as { data: Float32Array; width: number; height: number };
+  let best = 0;
+  let bi = 0;
+  for (let i = 0; i < w * h; i++) {
+    const l = data[i * 4] * 0.2126 + data[i * 4 + 1] * 0.7152 + data[i * 4 + 2] * 0.0722;
+    if (l > best) {
+      best = l;
+      bi = i;
+    }
+  }
+  const c = bi % w;
+  const r = Math.floor(bi / w);
+  const u = (c + 0.5) / w;
+  const v = 1 - (r + 0.5) / h;
+  const lat = (v - 0.5) * Math.PI;
+  const lon = (u - 0.5) * Math.PI * 2;
+  const dir = new THREE.Vector3(Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon));
+  // keep the shadow under the car readable even when the brightest point sits low on the horizon
+  if (dir.y < 0.35) dir.y = 0.35;
+  return dir.normalize();
+}
+
+function PhotoLighting({ cfg }: { cfg: PhotoCfg }) {
+  const hdr = useLoader(HDRLoader, cfg.hdr, (l) => l.setDataType(THREE.FloatType)) as THREE.DataTexture;
+  const dir = useMemo(() => {
+    hdr.mapping = THREE.EquirectangularReflectionMapping; // without this the panorama never becomes reflections
+    hdr.needsUpdate = true;
+    return sunDirection(hdr).applyAxisAngle(new THREE.Vector3(0, 1, 0), cfg.rot);
+  }, [hdr, cfg.rot]);
+  const light = useRef<THREE.DirectionalLight>(null!);
+  useEffect(() => {
+    const l = light.current;
+    l.target.position.set(0, 0, 0);
+    l.target.updateMatrixWorld();
+  }, []);
+  return (
+    <>
+      {/* the place's own light, plus studio softboxes a photographer would bring for clean highlight lines */}
+      <Environment map={hdr} environmentIntensity={cfg.env} environmentRotation={[0, cfg.rot, 0]} resolution={512} frames={1}>
+        <Lightformer intensity={cfg.soft} rotation-x={Math.PI / 2} position={[0, 7, 0]} scale={[8, 2.5, 1]} />
+        <Lightformer intensity={cfg.soft * 1.4} rotation-y={Math.PI / 2} position={[-7, 1.6, 0]} scale={[12, 0.4, 1]} />
+        <Lightformer intensity={cfg.soft * 1.4} rotation-y={-Math.PI / 2} position={[7, 1.6, 0]} scale={[12, 0.4, 1]} />
+      </Environment>
+      <directionalLight
+        ref={light}
+        position={dir.clone().multiplyScalar(14).toArray()}
+        intensity={cfg.sun}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-bias={-0.0004}
+        shadow-normalBias={0.03}
+        shadow-radius={6}
+        shadow-camera-left={-4.5}
+        shadow-camera-right={4.5}
+        shadow-camera-top={4.5}
+        shadow-camera-bottom={-4.5}
+        shadow-camera-near={1}
+        shadow-camera-far={40}
+      />
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0.002, 0]} receiveShadow renderOrder={1}>
+        <planeGeometry args={[24, 24]} />
+        <shadowMaterial transparent opacity={cfg.shadow} depthWrite={false} />
+      </mesh>
+      <ContactShadows position={[0, 0.004, 0]} opacity={0.75} scale={10} blur={2.2} far={2.2} resolution={1024} color="#000000" />
+      <ContactShadows position={[0, 0.006, 0]} opacity={0.8} scale={6} blur={0.8} far={0.5} resolution={1024} color="#000000" />
+    </>
+  );
+}
 
 /** Cyclorama per light: overhead, the glow at the horizon, the floor's far edge, and the floor itself. */
 const ROOM: Partial<Record<SceneId, { top: string; horizon: string; ground: string; floor: string; mirror: number }>> = {
   studio: { top: "#25292f", horizon: "#5c626b", ground: "#41464e", floor: "#3a3e45", mirror: 0.45 },
-  bay: { top: "#1b1e23", horizon: "#3a3f47", ground: "#2e3238", floor: "#33373e", mirror: 0.5 },
   night: { top: "#03050a", horizon: "#16244a", ground: "#05070c", floor: "#02040b", mirror: 0.9 },
 };
 
@@ -62,41 +183,6 @@ function SkyDome({ top, horizon, ground }: { top: string; horizon: string; groun
     <mesh material={mat} renderOrder={-1} frustumCulled={false}>
       <sphereGeometry args={[45, 48, 24]} />
     </mesh>
-  );
-}
-
-/** Hexagonal LED tube ceiling, the signature light of every paint-protection bay. */
-function HexCeiling({ intensity = 2.2, y = 4.2, cells = 4, size = 1.15 }) {
-  const tubes = useMemo(() => {
-    const out: { pos: [number, number, number]; rot: number }[] = [];
-    const w = Math.sqrt(3) * size;
-    const seen = new Set<string>();
-    for (let q = -cells; q <= cells; q++) {
-      for (let r = -cells; r <= cells; r++) {
-        const cx = w * (q + r / 2);
-        const cz = 1.5 * size * r;
-        if (Math.hypot(cx, cz) > cells * 1.6 * size) continue;
-        for (let i = 0; i < 6; i++) {
-          const a0 = (Math.PI / 3) * i + Math.PI / 6;
-          const a1 = a0 + Math.PI / 3;
-          const x0 = cx + size * Math.cos(a0), z0 = cz + size * Math.sin(a0);
-          const x1 = cx + size * Math.cos(a1), z1 = cz + size * Math.sin(a1);
-          const mx = (x0 + x1) / 2, mz = (z0 + z1) / 2;
-          const key = `${mx.toFixed(2)},${mz.toFixed(2)}`;
-          if (seen.has(key)) continue;
-          seen.add(key);
-          out.push({ pos: [mx, y, mz], rot: Math.atan2(z1 - z0, x1 - x0) });
-        }
-      }
-    }
-    return out;
-  }, [cells, size, y]);
-  return (
-    <group>
-      {tubes.map((t, i) => (
-        <Lightformer key={i} form="rect" intensity={intensity} position={t.pos} rotation={[Math.PI / 2, 0, -t.rot]} scale={[size * 0.96, 0.07, 1]} />
-      ))}
-    </group>
   );
 }
 
@@ -145,26 +231,13 @@ function CursorSoftbox() {
 }
 
 function LightRig({ scene, cursor }: { scene: SceneId; cursor: boolean }) {
-  const photo = PHOTO[scene];
-  if (photo)
-    return (
-      <Environment
-        files={photo.file}
-        background
-        ground={{ height: photo.height, radius: photo.radius, scale: photo.scale }}
-        environmentIntensity={photo.intensity}
-        environmentRotation={[0, photo.rotation ?? 0, 0]}
-        backgroundRotation={[0, photo.rotation ?? 0, 0]}
-      />
-    );
-
   const live = scene === "night" || cursor;
   return (
     <Environment
       files={scene === "night" ? "/hdri/rooftop_night_1k.hdr" : "/hdri/studio_small_09_1k.hdr"}
       resolution={512}
       frames={live ? Infinity : 1}
-      environmentIntensity={scene === "night" ? 0.85 : scene === "bay" ? 0.5 : 0.7}
+      environmentIntensity={scene === "night" ? 0.85 : 0.7}
     >
       {scene === "studio" && (
         <>
@@ -173,7 +246,6 @@ function LightRig({ scene, cursor }: { scene: SceneId; cursor: boolean }) {
           <Lightformer intensity={2.6} rotation-y={-Math.PI / 2} position={[6, 1.4, 0]} scale={[14, 0.3, 1]} />
         </>
       )}
-      {scene === "bay" && <HexCeiling />}
       {scene === "night" && (
         <>
           <Lightformer intensity={1.8} rotation-y={Math.PI / 2} position={[-7, 0.9, 0]} scale={[24, 0.14, 1]} color="#a9bfff" />
@@ -225,12 +297,23 @@ function Floor({ scene, quality }: { scene: SceneId; quality: "high" | "low" }) 
 }
 
 export function Stage({ scene, quality = "high", cursor = false }: { scene: SceneId; quality?: "high" | "low"; cursor?: boolean }) {
-  const room = ROOM[scene] ?? null;
+  const photo = PHOTO[scene];
+  if (photo)
+    return (
+      <>
+        <color attach="background" args={["#14171c"]} />
+        <Suspense fallback={null}>
+          <PhotoLighting cfg={photo} />
+          <PhotoBackdrop cfg={photo} />
+        </Suspense>
+      </>
+    );
+  const room = ROOM[scene]!;
   return (
     <>
-      <color attach="background" args={[room ? room.horizon : "#8a929c"]} />
-      {room && <SkyDome top={room.top} horizon={room.horizon} ground={room.ground} />}
-      {room && <fog attach="fog" args={[room.horizon, scene === "night" ? 11 : 13, 28]} />}
+      <color attach="background" args={[room.horizon]} />
+      <SkyDome top={room.top} horizon={room.horizon} ground={room.ground} />
+      <fog attach="fog" args={[room.horizon, scene === "night" ? 11 : 13, 28]} />
       <LightRig scene={scene} cursor={cursor} />
       <Floor scene={scene} quality={quality} />
     </>

@@ -35,16 +35,24 @@ function ShowroomSwitch() {
       <span className="sm:hidden">Showroom</span>
       <span
         aria-hidden
-        className={clsx(
-          "relative h-[22px] w-[40px] rounded-full transition-[background-color,box-shadow] duration-300",
-          showroom ? "bg-amber shadow-[0_0_14px_rgb(255_171_31/.6)]" : "bg-white/15"
-        )}
+        className="relative block shrink-0 overflow-hidden rounded-full transition-[background-color,box-shadow] duration-300"
+        style={{
+          width: 42,
+          height: 24,
+          background: showroom ? "#ffab1f" : "rgb(255 255 255 / .16)",
+          boxShadow: showroom ? "0 0 14px rgb(255 171 31 / .55)" : "inset 0 0 0 1px rgb(255 255 255 / .08)",
+        }}
       >
         <span
-          className={clsx(
-            "absolute top-[3px] h-4 w-4 rounded-full bg-white shadow-[0_2px_6px_rgb(0_0_0/.4)] transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]",
-            showroom ? "translate-x-[21px]" : "translate-x-[3px]"
-          )}
+          className="absolute rounded-full bg-white shadow-[0_2px_6px_rgb(0_0_0/.35)]"
+          style={{
+            top: 3,
+            left: 3,
+            width: 18,
+            height: 18,
+            transform: `translateX(${showroom ? 18 : 0}px)`,
+            transition: "transform 300ms cubic-bezier(0.23, 1, 0.32, 1)",
+          }}
         />
       </span>
     </button>
