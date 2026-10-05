@@ -79,8 +79,8 @@ export function Footer() {
               Arman Digital
             </a>
             . Not the official Porsche Walnut Creek website, and not affiliated with or endorsed by Sonic Automotive or Porsche Cars North
-            America. Porsche, 911, Carrera, Turbo, Taycan, Panamera, Macan, Cayenne, Boxster and Cayman are trademarks of Dr. Ing. h.c. F.
-            Porsche AG. {SAMPLE_PRICING_NOTE}
+            America. Porsche, the Porsche wordmark, 911, Carrera, Turbo, Taycan, Panamera, Macan, Cayenne, Boxster and Cayman are
+            trademarks of Dr. Ing. h.c. F. Porsche AG. {SAMPLE_PRICING_NOTE}
           </p>
           <p>
             3D models:{" "}
