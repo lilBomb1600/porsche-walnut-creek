@@ -28,11 +28,11 @@ function ShowroomSwitch() {
       role="switch"
       aria-checked={showroom}
       onClick={() => set({ showroom: !showroom })}
-      className="group flex items-center gap-2.5 rounded-full py-1.5 pl-3 pr-1.5 text-[13px] font-medium text-drl-2 transition-colors hover:text-drl"
+      className="group flex items-center gap-2.5 rounded-full py-1.5 pl-1.5 pr-1.5 text-[13px] font-medium text-drl-2 transition-colors hover:text-drl sm:pl-3"
       title="Showroom mode adds the finance handoff for use at the desk"
+      aria-label="Showroom mode"
     >
       <span className="hidden sm:inline">Showroom mode</span>
-      <span className="sm:hidden">Showroom</span>
       <span
         aria-hidden
         className="relative block shrink-0 overflow-hidden rounded-full transition-[background-color,box-shadow] duration-300"
