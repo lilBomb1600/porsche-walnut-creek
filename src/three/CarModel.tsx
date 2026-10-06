@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import type { CarSpec } from "@/data/cars";
+import { makeEuroPlateTexture, PLATE_SIZE } from "./euroPlate";
 import {
   createGlassUniforms,
   createPaintUniforms,
@@ -63,29 +64,94 @@ const FINISH: Record<CarRig["finish"], { rough: number; metal: number; cc: numbe
   matte: { rough: 0.62, metal: 0.45, cc: 0, ccr: 0.6 },
 };
 
-function makePlateTexture() {
-  const c = document.createElement("canvas");
-  c.width = 512;
-  c.height = 256;
-  const g = c.getContext("2d")!;
-  g.fillStyle = "#f4f5f2";
-  g.fillRect(0, 0, 512, 256);
-  g.fillStyle = "#c3161c";
-  g.font = "italic 600 44px Georgia, 'Times New Roman', serif";
-  g.textAlign = "center";
-  g.fillText("California", 256, 62);
-  g.fillStyle = "#16224a";
-  g.font = "bold 128px 'Arial Narrow', Arial, sans-serif";
-  g.fillText("WLNTCRK", 256, 186);
-  g.fillStyle = "#0b0c0f";
-  g.fillRect(0, 214, 512, 42);
-  g.fillStyle = "#eef0f4";
-  g.font = "600 22px Arial, sans-serif";
-  g.fillText("PORSCHE WALNUT CREEK", 256, 243);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 8;
-  return t;
+/**
+ * Mount German plates on the bumpers. Height comes from the file's own plate meshes when it has them,
+ * otherwise from the spec; depth is found by casting rays across the plate's footprint so it sits
+ * just proud of the most forward (or rearmost) surface behind it, wherever the bumper curves.
+ */
+function mountPlates(root: THREE.Object3D, spec: CarSpec) {
+  const cfg = spec.plate;
+  if (!cfg) return;
+  const sn = THREE.PropertyBinding.sanitizeNodeName;
+  const own = spec.materials.plates ?? [];
+  const saved = root.position.clone();
+  root.position.set(0, 0, 0);
+  root.updateMatrixWorld(true);
+
+  const heights: { side: 1 | -1; y: number }[] = [];
+  // the file's own plates (by mesh name or material); one mesh may hold both, so split its vertices front from rear
+  const span = { 1: [Infinity, -Infinity], [-1]: [Infinity, -Infinity] } as Record<1 | -1, [number, number]>;
+  const v = new THREE.Vector3();
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const matName = (mesh.material as THREE.Material)?.name;
+    const mine = own.some((x) => sn(x) === mesh.name) || (!!spec.materials.plateMaterial && matName === spec.materials.plateMaterial);
+    if (!mine) return;
+    const pos = mesh.geometry.getAttribute("position");
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
+      const sd = v.z > 0 ? 1 : -1;
+      span[sd][0] = Math.min(span[sd][0], v.y);
+      span[sd][1] = Math.max(span[sd][1], v.y);
+    }
+    mesh.visible = false;
+  });
+  for (const sd of [1, -1] as const) if (span[sd][0] < Infinity) heights.push({ side: sd, y: (span[sd][0] + span[sd][1]) / 2 });
+  if (!heights.some((h) => h.side === 1) && cfg.front !== undefined) heights.push({ side: 1, y: cfg.front });
+  if (!heights.some((h) => h.side === -1) && cfg.rear !== undefined) heights.push({ side: -1, y: cfg.rear });
+
+  const solid: THREE.Object3D[] = [];
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    let vis = true;
+    for (let p: THREE.Object3D | null = mesh; p; p = p.parent) if (!p.visible) vis = false;
+    const mat = mesh.material as THREE.Material;
+    if (vis && !(mat.transparent && mat.opacity < 0.5)) solid.push(mesh);
+  });
+
+  const u = 1 / spec.scale; // car space is the file's units
+  const w = PLATE_SIZE.w * u;
+  const h = PLATE_SIZE.h * u;
+  const tex = makeEuroPlateTexture(cfg.text);
+  const face = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.38, metalness: 0, envMapIntensity: 0.55 });
+  const back = new THREE.MeshStandardMaterial({ color: "#0b0c0e", roughness: 0.6 });
+  face.name = "pwc-plate";
+  back.name = "pwc-plate-holder";
+  const ray = new THREE.Raycaster();
+  const dir = new THREE.Vector3();
+  const from = new THREE.Vector3();
+
+  for (const { side, y } of heights) {
+    let edge = -Infinity * side;
+    let hits = 0;
+    for (const fx of [-0.48, -0.32, -0.16, 0, 0.16, 0.32, 0.48])
+      for (const fy of [-0.4, 0, 0.4]) {
+        from.set(fx * w, y + fy * h, side * 50);
+        dir.set(0, 0, -side);
+        ray.set(from, dir);
+        const hit = ray.intersectObjects(solid, false)[0];
+        if (!hit) continue;
+        hits++;
+        edge = side === 1 ? Math.max(edge, hit.point.z) : Math.min(edge, hit.point.z);
+      }
+    if (!hits) continue;
+    const z = edge + side * 0.006 * u;
+    const plate = new THREE.Group();
+    plate.position.set(0, y, z);
+    plate.rotation.y = side === 1 ? 0 : Math.PI;
+    const holder = new THREE.Mesh(new THREE.PlaneGeometry(w * 1.025, h * 1.12), back);
+    holder.position.z = -0.002 * u;
+    const plateMesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), face);
+    plateMesh.castShadow = true;
+    plateMesh.receiveShadow = true;
+    plate.add(holder, plateMesh);
+    plate.userData.euroPlate = true;
+    root.add(plate);
+  }
+  root.position.copy(saved);
+  root.updateMatrixWorld(true);
 }
 
 export function CarModel({
@@ -122,7 +188,6 @@ export function CarModel({
       if (!lampCache.has(key)) lampCache.set(key, makeLampMaterial(src as THREE.MeshStandardMaterial, lampU, { band }));
       return lampCache.get(key)!;
     };
-    const plate = spec.materials.plates?.length ? makePlateTexture() : null;
     // GLTFLoader sanitizes node names ("Plane.006_0" -> "Plane006_0"), so compare sanitized forms
     const sn = THREE.PropertyBinding.sanitizeNodeName;
     const has = (list: string[] | undefined, name: string) => !!list?.some((x) => sn(x) === name);
@@ -174,14 +239,14 @@ export function CarModel({
         m.lampMaterials?.includes(matName)
       )
         mesh.material = lamp(mat, is(m.band, mesh.name));
-      else if (plate && has(m.plates, mesh.name)) {
-        mesh.material = new THREE.MeshStandardMaterial({ map: plate, roughness: 0.45, metalness: 0.1 });
-      } else if (matName === "window") {
+      else if (matName === "window") {
         mesh.material = glass.side;
       } else {
         mesh.material = realistic(mat);
       }
     });
+
+    mountPlates(root, spec);
 
     return { root, paintU, glassU, lampU, paint };
   }, [scene, spec, rig]);

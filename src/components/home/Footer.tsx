@@ -3,6 +3,7 @@ import { dealership } from "@/data/dealership";
 import { cars, hdriCredits } from "@/data/cars";
 import { SAMPLE_PRICING_NOTE } from "@/data/protection";
 import { Wordmark } from "@/components/Wordmark";
+import { mediaCredit } from "@/data/media";
 
 export function Footer() {
   const d = dealership;
@@ -104,7 +105,12 @@ export function Footer() {
                 </a>
                 {i < hdriCredits.length - 1 ? ", " : "."}
               </span>
-            ))}
+            ))}{" "}
+            Photos and film: Porsche AG, via{" "}
+            <a href={mediaCredit.newsroom} target="_blank" rel="noopener noreferrer" className="underline decoration-[var(--line-2)] hover:text-drl">
+              the Porsche Newsroom
+            </a>
+            , used with approval. Studio backdrops and textures generated with Higgsfield.
           </p>
         </div>
       </div>

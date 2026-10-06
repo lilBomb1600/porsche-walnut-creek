@@ -376,3 +376,29 @@ a {
   opacity: 1;
   letter-spacing: 0.62em;
 }
+
+/* Film chapter bars: a tail-light strip that fills with the playhead. */
+.film-bar {
+  transform: scaleX(var(--p, 0));
+  background: linear-gradient(180deg, #ff4a5c, #e8102a 55%, #a3061b);
+  box-shadow: 0 0 6px rgb(255 30 50 / 0.9), 0 0 16px rgb(232 16 42 / 0.5);
+}
+
+/* Official model signatures: masked lamp white, sized off their own viewBox at one shared scale. */
+.model-signature {
+  --sig-k: 1.05;
+  background: #fff;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  filter: drop-shadow(0 2px 14px rgb(0 0 0 / 0.45));
+}
+@media (min-width: 640px) {
+  .model-signature { --sig-k: 1.3; }
+}
+@media (min-width: 1280px) {
+  .model-signature { --sig-k: 1.5; }
+}

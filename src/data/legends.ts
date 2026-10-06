@@ -13,6 +13,8 @@ export type Legend = {
   specs: [string, string][];
   story: string;
   color: string;
+  /** Today's icons carry a photograph; a few also carry a loop of Porsche film. */
+  media?: { src: string; alt: string; position?: string; loop?: { src: string; poster: string }; studio?: string };
 };
 
 export const legendCategories: LegendCategory[] = ["Hypercars", "Today's icons", "Motorsport", "Origins"];
@@ -75,6 +77,12 @@ export const legends: Legend[] = [
     ],
     story: "Fifty years after the first 911 Turbo, the newest one goes hybrid and past 700 horsepower.",
     color: "#ff3348",
+    media: {
+      src: "/media/911-turbo-s.jpg",
+      alt: "911 Turbo S in blue on a race track at sunset",
+      position: "60% 62%",
+      loop: { src: "/media/loop-turbo.mp4", poster: "/media/loop-turbo.jpg" },
+    },
   },
   {
     id: "taycan-turbo-gt",
@@ -89,6 +97,7 @@ export const legends: Legend[] = [
     ],
     story: "The most powerful production Porsche, and an electric sedan that laps the Nürburgring like a supercar.",
     color: "#00a4d6",
+    media: { src: "/media/taycan-ring.jpg", alt: "Taycan Turbo GT cornering at the Nürburgring", position: "62% 58%" },
   },
   {
     id: "cayenne-turbo-gt",
@@ -103,6 +112,7 @@ export const legends: Legend[] = [
     ],
     story: "The SUV that put its rivals on notice at the Ring, with a GT badge it earned on track.",
     color: "#f4c400",
+    media: { src: "/media/cayenne-turbo-gt.jpg", alt: "Cayenne Turbo GT on a desert highway", position: "50% 62%" },
   },
   {
     id: "gt3-rs",
@@ -117,6 +127,12 @@ export const legends: Legend[] = [
     ],
     story: "A road-legal race car whose wing is taller than the roof. Built for lap times, legal on the 680.",
     color: "#38a748",
+    media: {
+      src: "/media/gt3rs-track.jpg",
+      alt: "911 GT3 RS in white with red wheels on a race track",
+      position: "55% 62%",
+      loop: { src: "/media/loop-gt3rs.mp4", poster: "/media/loop-gt3rs.jpg" },
+    },
   },
   {
     id: "gt3",
@@ -131,6 +147,7 @@ export const legends: Legend[] = [
     ],
     story: "No turbos, no hybrid, a nine-thousand-rpm redline. The purist's 911.",
     color: "#e0501c",
+    media: { src: "/media/gt3-studio.jpg", alt: "911 GT3 rendered in the Protection Studio", position: "50% 58%", studio: "/studio?car=gt3" },
   },
   {
     id: "919",

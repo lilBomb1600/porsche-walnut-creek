@@ -59,9 +59,12 @@ export type CarSpec = {
     glassMaterial?: string; // one combined glass material, classified by position
     lampMaterials?: string[]; // materials that glow (front white, rear red)
     plates?: string[];
+    plateMaterial?: string; // or every mesh with this material is a plate
   };
   zones: CarZones;
   bandAnchor: [number, number, number];
+  /** German-format plates ("S·PW 911"; the dot is where the seals sit) at these car-space heights. Cars whose file has its own plate meshes use theirs for height. */
+  plate?: { text: string; front?: number; rear?: number };
   /** Pin anchors for the numbered coverage map (model space, left side = +x). */
   anchors: Record<AnchorId, [number, number, number]>;
   /** Lamp centers for glow halos and light spill (model space). */
@@ -109,6 +112,7 @@ export const cars: CarSpec[] = [
       wsZ: 0.2,
       sideAbsX: 0.7,
     },
+    plate: { text: "S·PW 911" },
     bandAnchor: [0, 0.062, -2.05],
     glow: {
       tail: [
@@ -158,6 +162,7 @@ export const cars: CarSpec[] = [
       glassMaterial: "glass",
       lampMaterials: ["930_lights"],
       plates: [],
+      plateMaterial: "plate",
     },
     zones: {
       frontZ: 2.651,
@@ -177,6 +182,7 @@ export const cars: CarSpec[] = [
       wsZ: 0.0,
       sideAbsX: 0.64,
     },
+    plate: { text: "S·PW 930H" },
     bandAnchor: [0, 0.45, -2.13],
     glow: {
       tail: [
@@ -246,6 +252,7 @@ export const cars: CarSpec[] = [
       sideAbsX: 0.7,
       glassMinY: 0.84,
     },
+    plate: { text: "S·GT 992", front: 0.3, rear: 0.47 },
     bandAnchor: [0, 0.86, -2.2],
     glow: {
       tail: [
@@ -314,6 +321,7 @@ export const cars: CarSpec[] = [
       sideAbsX: 0.74,
       glassMinY: 0.95,
     },
+    plate: { text: "S·PW 2555E", front: 0.32, rear: 0.52 },
     bandAnchor: [0, 0.903, -2.28],
     glow: {
       tail: [

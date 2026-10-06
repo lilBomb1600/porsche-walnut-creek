@@ -36,7 +36,9 @@ function UsFlag() {
 
 const menuLinks = [
   { href: "/studio", label: "Protection Studio", note: "Paint, film, tint and coat on a live 911" },
+  { href: "#film", label: "Film", note: "GTS, Turbo S, GT3 RS and Macan in motion" },
   { href: "#lineup", label: "Models", note: "911, 718, Taycan, Panamera, Macan, Cayenne" },
+  { href: "#motorsport", label: "Motorsport", note: "Victory at Petit Le Mans" },
   { href: "#legends", label: "Legends", note: "918 Spyder, Carrera GT, 919 Hybrid and more" },
   { href: "#history", label: "Heritage", note: "From the 356 to the Taycan" },
   { href: "#service", label: "Service", note: "Certified technicians, OEM parts, tires" },

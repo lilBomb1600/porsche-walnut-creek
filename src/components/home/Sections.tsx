@@ -20,7 +20,7 @@ export function Service() {
   const d = dealership;
   return (
     <section id="service" className="px-5 py-32 sm:px-8 lg:px-12 lg:py-40">
-      <div className="mx-auto grid max-w-[1400px] gap-16 lg:grid-cols-[0.95fr_1.05fr]">
+      <div className="mx-auto grid max-w-[1400px] gap-16 lg:grid-cols-[0.95fr_1.05fr] [&>*]:min-w-0">
         <div>
           <LitHeading className="text-[clamp(38px,5.2vw,80px)] leading-[0.92]">Service that knows the car.</LitHeading>
           <ul className="mt-12">
@@ -70,6 +70,16 @@ export function Buying() {
             That&apos;s Porsche Walnut Creek Transparent Pricing: no hidden fees. The store is part of Sonic Automotive, which Newsweek
             named one of its 2026 Most Trustworthy Companies in America.
           </p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/media/taycan.jpg"
+            srcSet="/media/taycan-1200.jpg 1200w, /media/taycan.jpg 2400w"
+            sizes="(min-width: 1024px) 45vw, 100vw"
+            alt="Taycan steering wheel with the Porsche crest and drive mode switch"
+            loading="lazy"
+            decoding="async"
+            className="mt-12 aspect-[16/10] w-full rounded-[28px] object-cover object-[40%_50%] ring-1 ring-white/10"
+          />
         </div>
         <ul className="self-end border-t border-[var(--line)]">
           {rows.map((r) => (
@@ -147,12 +157,20 @@ export function StudioModes() {
     <section id="studio" className="border-b border-[var(--line)] px-5 py-28 sm:px-8 lg:px-12 lg:py-36">
       <div className="mx-auto max-w-[1400px]">
         <LitHeading className="max-w-[16ch] text-[clamp(38px,5.2vw,80px)] leading-[0.92]">One studio for the couch and the desk.</LitHeading>
-        <div className="relative mt-16">
-          <div aria-hidden className="pointer-events-none absolute -left-10 top-0 h-80 w-80 rounded-full bg-[#e8102a]/30 blur-[90px]" />
-          <div aria-hidden className="pointer-events-none absolute -right-10 bottom-0 h-80 w-80 rounded-full bg-[#0098c9]/25 blur-[90px]" />
-          <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/3 h-56 w-56 rounded-full bg-[#f4c400]/15 blur-[80px]" />
-          <div className="relative grid gap-5 md:grid-cols-2">
-            <div className="glass rounded-[28px] p-8 sm:p-10">
+        <div className="relative mt-16 overflow-hidden rounded-[32px] bg-night-2 ring-1 ring-white/10 md:min-h-[min(820px,58vw)]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/media/911-turbo-group.jpg"
+            srcSet="/media/911-turbo-group-1200.jpg 1200w, /media/911-turbo-group.jpg 2400w"
+            sizes="(min-width: 1400px) 1400px, 100vw"
+            alt="Two 911 Turbo S coupes, one blue and one pale green, on a race track"
+            loading="lazy"
+            decoding="async"
+            className="h-[62vw] w-full object-cover object-[50%_72%] md:absolute md:inset-0 md:h-full"
+          />
+          <div aria-hidden className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(180deg,rgb(7_9_14/.62)_0%,rgb(7_9_14/.2)_42%,transparent_60%)] md:block" />
+          <div className="relative -mt-14 grid gap-4 p-3 sm:p-4 md:mt-0 md:grid-cols-2 md:gap-5 md:p-6 lg:p-8">
+            <div className="glass-dark relative rounded-[26px] p-7 sm:p-9">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[12px] font-semibold text-white">
                 <span aria-hidden className="block h-2 w-2 rounded-full bg-[#ff3348] shadow-[0_0_10px_#ff3348]" /> For buyers
               </span>
@@ -166,7 +184,7 @@ export function StudioModes() {
                 </LampLink>
               </div>
             </div>
-            <div className="glass rounded-[28px] p-8 sm:p-10">
+            <div className="glass-dark relative rounded-[26px] p-7 sm:p-9">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[12px] font-semibold text-white">
                 <span aria-hidden className="block h-2 w-2 rounded-full bg-[#ffab1f] shadow-[0_0_10px_#ffab1f]" /> For the sales team
               </span>

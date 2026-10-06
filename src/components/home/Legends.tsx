@@ -1,14 +1,48 @@
 "use client";
 
 import clsx from "clsx";
+import Link from "next/link";
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { legendCategories, legends, type LegendCategory } from "@/data/legends";
+import { ArrowRight, Play } from "lucide-react";
+import { legendCategories, legends, type Legend, type LegendCategory } from "@/data/legends";
+import { MotionPhoto } from "@/components/media/MotionPhoto";
 import { LitHeading } from "./LitHeading";
+
+/** Photo header for the cars you can buy today; it plays its film while the card is pointed at. */
+function LegendMedia({ l, active }: { l: Legend; active: boolean }) {
+  const m = l.media!;
+  return (
+    <div className="relative -mx-7 -mt-7 mb-7 sm:-mx-8 sm:-mt-8">
+      <MotionPhoto
+        src={m.src}
+        alt={m.alt}
+        position={m.position}
+        loop={m.loop}
+        active={active}
+        sizes="(min-width: 1280px) 30vw, (min-width: 768px) 46vw, 92vw"
+        className="aspect-[16/10]"
+        imgClassName="transition-transform duration-[1200ms] ease-[var(--ease-out-expo)] group-hover:scale-[1.04]"
+      />
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_55%,rgb(12_17_27/.7))]" />
+      {m.loop && (
+        <span aria-hidden className="glass-dark absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold text-white">
+          <Play size={11} className="fill-current" /> Film
+        </span>
+      )}
+      {m.studio && (
+        <span aria-hidden className="glass-dark absolute right-4 top-4 rounded-full px-2.5 py-1 text-[12px] font-semibold text-white">
+          Rendered in our studio
+        </span>
+      )}
+    </div>
+  );
+}
 
 /** The hall of legends: tabs slide a lit pill between eras; each card glows in its car's color. */
 export function Legends() {
   const [cat, setCat] = useState<LegendCategory>("Hypercars");
+  const [hover, setHover] = useState<string | null>(null);
   const reduce = useReducedMotion();
   const list = legends.filter((l) => l.category === cat);
   const ease = [0.23, 1, 0.32, 1] as const;
@@ -60,10 +94,13 @@ export function Legends() {
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={reduce ? { opacity: 0 } : { opacity: 0, y: -16, filter: "blur(6px)" }}
                 transition={{ duration: 0.55, ease, delay: reduce ? 0 : i * 0.06 }}
+                onPointerEnter={(e) => e.pointerType === "mouse" && setHover(l.id)}
+                onPointerLeave={(e) => e.pointerType === "mouse" && setHover(null)}
                 className="legend-card glass group relative overflow-hidden rounded-[28px] p-7 sm:p-8"
                 style={{ ["--era" as string]: l.color }}
               >
-                <div aria-hidden className="legend-glow pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full blur-3xl" />
+                {l.media && <LegendMedia l={l} active={hover === l.id} />}
+                {!l.media && <div aria-hidden className="legend-glow pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full blur-3xl" />}
                 <div className="relative flex items-start justify-between gap-4">
                   <div>
                     <h3 className="font-mark-caps text-[18px] leading-tight text-white sm:text-[20px]">{l.name}</h3>
@@ -84,6 +121,11 @@ export function Legends() {
                   ))}
                 </dl>
                 <p className="relative mt-5 text-[14px] leading-relaxed text-white/70 text-pretty">{l.story}</p>
+                {l.media?.studio && (
+                  <Link href={l.media.studio} className="relative mt-5 inline-flex items-center gap-1.5 text-[14px] font-semibold text-white hover:underline">
+                    Build one in the studio <ArrowRight size={15} />
+                  </Link>
+                )}
               </motion.article>
             ))}
           </AnimatePresence>

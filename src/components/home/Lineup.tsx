@@ -2,92 +2,161 @@
 
 import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight } from "lucide-react";
-import { lineup } from "@/data/lineup";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { lineup, MSRP_NOTE, PRICES_CHECKED, type Fuel, type ModelLine } from "@/data/lineup";
 import { dealership } from "@/data/dealership";
+import { MotionPhoto } from "@/components/media/MotionPhoto";
 import { LitHeading } from "./LitHeading";
 
-/** Model lines lettered like badges. A row lights when you point at it, or when it crosses the middle of a phone screen. */
+const FUEL_DOT: Record<Fuel, string> = {
+  Gasoline: "#ffab1f",
+  Hybrid: "#b6e34a", // e-hybrid acid green
+  Electric: "#7fd0ff",
+};
+
+const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+
+/** The official model signature, drawn in lamp white through a mask so it can glow. */
+function Signature({ sig, name }: { sig: ModelLine["signature"]; name: string }) {
+  return (
+    <span
+      role="img"
+      aria-label={name}
+      className="model-signature block"
+      style={{
+        width: `calc(${sig.w}px * var(--sig-k))`,
+        aspectRatio: `${sig.w} / ${sig.h}`,
+        WebkitMaskImage: `url(${sig.src})`,
+        maskImage: `url(${sig.src})`,
+      }}
+    />
+  );
+}
+
+function ModelCard({ m, active, onActive }: { m: ModelLine; active: boolean; onActive: (id: string | null) => void }) {
+  return (
+    <article
+      data-id={m.id}
+      onPointerEnter={(e) => e.pointerType === "mouse" && onActive(m.id)}
+      onPointerLeave={(e) => e.pointerType === "mouse" && onActive(null)}
+      onFocus={() => onActive(m.id)}
+      onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && onActive(null)}
+      className="model-card group relative isolate overflow-hidden rounded-[28px] bg-night-3 ring-1 ring-white/10"
+    >
+      <MotionPhoto
+        src={m.photo.src}
+        alt={m.photo.alt}
+        position={m.photo.position}
+        loop={m.loop}
+        active={active}
+        sizes="(min-width: 768px) 50vw, 100vw"
+        className="aspect-[4/5] sm:aspect-[5/4]"
+        imgClassName="transition-transform duration-[1400ms] ease-[var(--ease-out-expo)] group-hover:scale-[1.04]"
+      />
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgb(4_6_10/.78)_0%,rgb(4_6_10/.2)_24%,transparent_40%,transparent_48%,rgb(4_6_10/.55)_68%,rgb(4_6_10/.94)_100%)]" />
+
+      <h3 className="absolute inset-x-0 top-0 flex justify-center pt-[clamp(22px,3.2vw,40px)]">
+        <a href={m.newUrl} target="_blank" rel="noopener noreferrer" className="rounded-md outline-offset-8">
+          <Signature sig={m.signature} name={m.name} />
+        </a>
+      </h3>
+
+      <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7 lg:p-8">
+        <ul className="flex flex-wrap gap-1.5" aria-label="Powertrains">
+          {m.from === null && (
+            <li className="glass-dark rounded-full px-3 py-1 text-[12.5px] font-semibold text-white">Unavailable for new orders</li>
+          )}
+          {m.fuels.map((f) => (
+            <li key={f} className="glass-dark inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12.5px] font-semibold text-white">
+              <span aria-hidden className="block h-1.5 w-1.5 rounded-full" style={{ background: FUEL_DOT[f], boxShadow: `0 0 8px ${FUEL_DOT[f]}` }} />
+              {f}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+          <div className="min-w-0 basis-full sm:max-w-[36ch] sm:flex-1 sm:basis-auto">
+            <p className="text-[15.5px] leading-relaxed text-white/90 text-pretty sm:text-[17px]">{m.line}</p>
+            <p className="mt-2 text-[15px] text-white/75">
+              {m.from ? (
+                <>
+                  From <span className="tnum font-semibold text-white">{usd(m.from)}</span>*
+                </>
+              ) : (
+                <a href={m.newUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-amber hover:underline">
+                  See the cars in stock
+                </a>
+              )}
+              <span aria-hidden className="mx-2 text-white/30">·</span>
+              <a href={m.usedUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white hover:underline">
+                Pre-owned
+              </a>
+            </p>
+          </div>
+          <a
+            href={m.newUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="glass-dark inline-flex shrink-0 items-center gap-2 rounded-full px-5 py-3 text-[15px] font-semibold text-white transition-[background-color,color,transform] duration-300 ease-[var(--ease-out-quart)] hover:bg-white hover:text-night active:scale-[0.97]"
+          >
+            Explore the {m.name} <ArrowRight size={17} />
+          </a>
+        </div>
+      </div>
+      <span
+        aria-hidden
+        className={clsx(
+          "absolute inset-x-8 bottom-0 h-[2px] origin-center rounded-full transition-transform duration-700 ease-[var(--ease-out-expo)]",
+          active ? "scale-x-100" : "scale-x-0"
+        )}
+        style={{ background: "linear-gradient(90deg,#a3061b,#ff3348 30%,#ff4a5c 50%,#ff3348 70%,#a3061b)", boxShadow: "var(--bar-glow)" }}
+      />
+    </article>
+  );
+}
+
+/** Every model line as a photo card under its official signature. Pointing at a card plays Porsche's film of it; on a phone, the card in view plays. */
 export function Lineup() {
   const [active, setActive] = useState<string | null>(null);
-  const [touch, setTouch] = useState(false);
-  const rows = useRef<(HTMLLIElement | null)[]>([]);
+  const rail = useRef<HTMLDivElement>(null);
 
+  // Touch screens have no hover: the card that sits fully in view is the active one.
   useEffect(() => {
-    const coarse = window.matchMedia("(hover: none)").matches;
-    setTouch(coarse);
-    if (!coarse) return;
+    if (!window.matchMedia("(hover: none)").matches) return;
     const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => e.isIntersecting && setActive((e.target as HTMLElement).dataset.id!)),
-      { rootMargin: "-45% 0px -45% 0px" }
+      (entries) => {
+        const seen = entries.filter((e) => e.intersectionRatio > 0.7).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (seen) setActive((seen.target as HTMLElement).dataset.id!);
+      },
+      { threshold: [0.4, 0.7, 0.9, 1] }
     );
-    rows.current.forEach((r) => r && io.observe(r));
+    rail.current?.querySelectorAll<HTMLElement>("[data-id]").forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, []);
 
   return (
-    <section id="lineup" className="relative px-5 pb-28 pt-36 sm:px-8 lg:px-12 lg:pt-44">
+    <section id="lineup" className="relative px-5 pb-28 pt-32 sm:px-8 lg:px-12 lg:pt-40">
       <div className="mx-auto max-w-[1400px]">
         <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:items-end">
           <LitHeading className="text-[clamp(38px,5.6vw,84px)] leading-[0.92]">Every Porsche line, under one roof.</LitHeading>
           <p className="max-w-[48ch] text-[16px] leading-relaxed text-drl-2 text-pretty lg:justify-self-end">
-            New, Porsche Approved certified and pre-owned. Inventory changes daily, so every link below opens the store&apos;s live
-            listings.
+            New, Porsche Approved certified and pre-owned. Inventory changes daily, so every link opens the store&apos;s live listings.
           </p>
         </div>
 
-        <ul className="mt-16 border-t border-[var(--line)]" onMouseLeave={() => !touch && setActive(null)}>
-          {lineup.map((m, i) => {
-            const on = active === m.id;
-            return (
-              <li
-                key={m.id}
-                ref={(el) => void (rows.current[i] = el)}
-                data-id={m.id}
-                onMouseEnter={() => !touch && setActive(m.id)}
-                className="group relative border-b border-[var(--line)]"
-              >
-                <div className="grid grid-cols-1 items-center gap-x-8 gap-y-3 py-6 md:grid-cols-[1fr_auto] md:py-7">
-                  <a
-                    href={m.newUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onFocus={() => setActive(m.id)}
-                    className={clsx(
-                      "font-display block text-[clamp(52px,10.5vw,168px)] font-black leading-[0.82] tracking-[-0.02em] transition-[color,text-shadow] duration-500 ease-[var(--ease-out-quart)]",
-                      on ? "text-drl [text-shadow:0_0_40px_rgb(170_200_255/.28)]" : "text-drl-faint"
-                    )}
-                  >
-                    {m.name}
-                  </a>
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 md:flex-col md:items-end md:gap-2">
-                    <p className={clsx("text-[14px] font-medium transition-colors duration-500", on ? "text-drl-2" : "text-drl-dim")}>
-                      {m.styles.join(" · ")}
-                    </p>
-                    <div className="flex items-center gap-4 text-[14px] font-semibold">
-                      <a href={m.newUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-drl hover:underline">
-                        New <ArrowUpRight size={15} />
-                      </a>
-                      <a href={m.usedUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-drl-2 hover:text-drl hover:underline">
-                        Pre-owned <ArrowUpRight size={15} />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-                <span
-                  aria-hidden
-                  className={clsx(
-                    "absolute -bottom-px left-0 h-[2px] w-full origin-left transition-transform duration-700 ease-[var(--ease-out-expo)]",
-                    on ? "scale-x-100" : "scale-x-0"
-                  )}
-                  style={{ background: "#eef4ff", boxShadow: "0 0 8px rgb(238 244 255 / .9), 0 0 22px rgb(170 200 255 / .45)" }}
-                />
-              </li>
-            );
-          })}
-        </ul>
+        <div
+          ref={rail}
+          className="mt-14 grid gap-4 sm:gap-6 lg:grid-cols-2 lg:gap-7"
+        >
+          {lineup.map((m) => (
+            <ModelCard key={m.id} m={m} active={active === m.id} onActive={setActive} />
+          ))}
+        </div>
 
-        <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3 text-[15px] font-semibold">
+        <p className="mt-12 max-w-[110ch] text-[12.5px] leading-relaxed text-drl-faint">
+          *{MSRP_NOTE} Starting prices as listed on porsche.com on {PRICES_CHECKED}. Photos, film and model signatures: Porsche AG.
+        </p>
+
+        <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-[15px] font-semibold">
           <a href={dealership.links.cpo} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-drl hover:underline">
             Porsche Approved certified pre-owned <ArrowUpRight size={16} />
           </a>
