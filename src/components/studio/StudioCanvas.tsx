@@ -41,7 +41,7 @@ function RigSync({ rig }: { rig: React.RefObject<CarRig> }) {
       r.wsStrip = s.windshield === "strip" ? 1 : 0;
       r.testStrip = s.testStrip ? 1 : 0;
       r.ceramic = s.ceramic > 0 ? 0.55 + s.ceramic / 16 : 0;
-      const lit = s.scene === "night" || s.scene === "studio";
+      const lit = s.scene === "night" || s.scene === "studio" || s.scene === "showroom3d";
       r.drl = lit ? 1 : 0.35;
       r.tail = lit ? 1 : 0.35;
       r.reveal = 1;
@@ -90,15 +90,16 @@ function CameraRig() {
       c.setLookAt(p.x, p.y, p.z, t.x, t.y, t.z, !reduced.current);
       return;
     }
+    const inside = scene === "showroom3d" || scene === "courtyard3d";
     c.minPolarAngle = 0;
-    c.maxPolarAngle = Math.PI / 2 - 0.04;
+    c.maxPolarAngle = Math.PI / 2 - (inside ? 0.12 : 0.04);
     c.minDistance = 3.2;
-    c.maxDistance = 22;
+    c.maxDistance = scene === "showroom3d" ? 9.5 : scene === "courtyard3d" ? 11.5 : 22;
     const v = VIEWS[view];
     const t = new THREE.Vector3(...v.target);
-    const p = new THREE.Vector3(...v.pos).sub(t).multiplyScalar(view === "top" ? Math.max(1, fit * 0.85) : fit).add(t);
+    const p = new THREE.Vector3(...v.pos).sub(t).multiplyScalar(Math.min(inside ? 1.45 : 99, view === "top" ? Math.max(1, fit * 0.85) : fit)).add(t);
     c.setLookAt(p.x, p.y, p.z, t.x, t.y, t.z, !reduced.current);
-  }, [view, nonce, fit, plate]);
+  }, [view, nonce, fit, plate, scene]);
   return (
     <CameraControls
       ref={ref}

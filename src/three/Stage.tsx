@@ -7,8 +7,9 @@ import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
 import { ContactShadows, Environment, Lightformer, MeshReflectorMaterial } from "@react-three/drei";
 import { Bloom, EffectComposer, N8AO, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
+import { Courtyard3D, Showroom3D } from "./Worlds";
 
-export type SceneId = "architecture" | "courtyard" | "showroom" | "bigsur" | "diablo" | "studio" | "night";
+export type SceneId = "architecture" | "courtyard" | "showroom" | "bigsur" | "diablo" | "showroom3d" | "courtyard3d" | "studio" | "night";
 
 export const sceneList: { id: SceneId; name: string; note: string }[] = [
   { id: "architecture", name: "Architecture", note: "Slatted wall, concrete plaza, afternoon sun" },
@@ -16,6 +17,8 @@ export const sceneList: { id: SceneId; name: string; note: string }[] = [
   { id: "showroom", name: "Showroom", note: "Glass walls, polished floor" },
   { id: "bigsur", name: "Big Sur", note: "Coastal overlook at golden hour" },
   { id: "diablo", name: "Mount Diablo", note: "Golden hills at sunset, just up the road" },
+  { id: "showroom3d", name: "3D Showroom", note: "Walk all the way around · glass, LED strips" },
+  { id: "courtyard3d", name: "3D Courtyard", note: "Walk all the way around · slatted walls, sun" },
   { id: "studio", name: "Studio", note: "Grey cyclorama, softbox reflections" },
   { id: "night", name: "Night drive", note: "City light streaming over the paint" },
 ];
@@ -307,6 +310,13 @@ export function Stage({ scene, quality = "high", cursor = false }: { scene: Scen
           <PlateLighting cfg={plate} />
           <PlateBackground cfg={plate} />
         </Suspense>
+      </>
+    );
+  if (scene === "showroom3d" || scene === "courtyard3d")
+    return (
+      <>
+        <color attach="background" args={["#d9e2ea"]} />
+        <Suspense fallback={null}>{scene === "showroom3d" ? <Showroom3D quality={quality} /> : <Courtyard3D />}</Suspense>
       </>
     );
   const room = ROOM[scene]!;

@@ -362,6 +362,8 @@ function SceneGlyph({ id }: { id: SceneId }) {
       {id === "showroom" && <g {...c}><path d="M3 24h34M6 24V7h28v17M13 7v17M20 7v17M27 7v17" /></g>}
       {id === "bigsur" && <g {...c}><path d="M3 24h34M3 18c6-1 8-9 14-10M22 16h15M26 12c2-1 4-1 6 0" /></g>}
       {id === "diablo" && <g {...c}><path d="M3 24h34M3 19l9-7 5 3 7-9 13 13" /><circle cx="8" cy="7" r="2" /></g>}
+      {id === "showroom3d" && <g {...c}><path d="M20 3l14 7v10l-14 7-14-7V10z M6 10l14 7 14-7M20 17v10" /></g>}
+      {id === "courtyard3d" && <g {...c}><path d="M20 3l14 7v10l-14 7-14-7V10z M11 12v8M16 14v8M24 14v8M29 12v8" /></g>}
       {id === "studio" && <g {...c}><path d="M4 6h32M4 14h32M4 22h32" /></g>}
       {id === "night" && <g {...c}><circle cx="8" cy="6" r="2" fill="currentColor" /><circle cx="20" cy="6" r="2" fill="currentColor" /><circle cx="32" cy="6" r="2" fill="currentColor" /><path d="M3 22l34-2" /></g>}
     </svg>
