@@ -37,6 +37,7 @@ function UsFlag() {
 const menuLinks = [
   { href: "/studio", label: "Protection Studio", note: "Paint, film, tint and coat on a live 911" },
   { href: "#lineup", label: "Models", note: "911, 718, Taycan, Panamera, Macan, Cayenne" },
+  { href: "#legends", label: "Legends", note: "918 Spyder, Carrera GT, 919 Hybrid and more" },
   { href: "#history", label: "Heritage", note: "From the 356 to the Taycan" },
   { href: "#service", label: "Service", note: "Certified technicians, OEM parts, tires" },
   { href: "#buying", label: "Buying", note: "Porsche Approved, finance, trade-in" },
@@ -102,7 +103,7 @@ function Menu({ open, onClose }: { open: boolean; onClose: () => void }) {
                         className="group flex items-center justify-between gap-6 py-4 sm:py-5"
                       >
                         <span>
-                          <span className="font-livery block text-[clamp(30px,4.6vw,60px)] leading-[0.95] text-drl-2 transition-[color,transform] duration-300 group-hover:translate-x-2 group-hover:text-white">
+                          <span className="font-mark-caps block text-[clamp(20px,3vw,40px)] leading-[1.15] text-drl-2 transition-[color,transform,letter-spacing] duration-300 group-hover:translate-x-2 group-hover:text-white group-hover:tracking-[0.12em]">
                             {l.label}
                           </span>
                           <span className="mt-1.5 block text-[13.5px] text-drl-dim">{l.note}</span>
@@ -119,7 +120,7 @@ function Menu({ open, onClose }: { open: boolean; onClose: () => void }) {
                 transition={{ delay: 0.45, duration: 0.7, ease }}
                 className="glass self-start rounded-3xl p-7"
               >
-                <p className="font-livery text-[26px] leading-none text-white">Porsche Walnut Creek</p>
+                <p className="font-mark-caps text-[17px] leading-snug text-white">Porsche Walnut Creek</p>
                 <p className="mt-4 text-[14.5px] leading-relaxed text-white/75">
                   {dealership.address.oneLine}
                   <br />

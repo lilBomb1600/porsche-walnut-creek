@@ -105,7 +105,7 @@ export function Visit() {
   return (
     <section id="visit" className="relative overflow-hidden border-t border-[var(--line)] px-5 pb-28 pt-32 sm:px-8 lg:px-12 lg:pt-40">
       <div className="mx-auto max-w-[1400px]">
-        <LitHeading className="text-[clamp(48px,10vw,170px)] leading-[0.84] tracking-[-0.025em]" line={false}>
+        <LitHeading className="font-mark-caps text-[clamp(30px,6.4vw,104px)] leading-[1.02]" line={false}>
           2555 N Main St
         </LitHeading>
         <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_auto] lg:items-end">

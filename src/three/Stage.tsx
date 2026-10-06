@@ -3,148 +3,149 @@
 import * as THREE from "three";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
-import { GroundedSkybox } from "three/examples/jsm/objects/GroundedSkybox.js";
 import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
 import { ContactShadows, Environment, Lightformer, MeshReflectorMaterial } from "@react-three/drei";
 import { Bloom, EffectComposer, N8AO, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 
-export type SceneId = "road" | "warehouse" | "hangar" | "studio" | "night";
+export type SceneId = "architecture" | "courtyard" | "showroom" | "bigsur" | "diablo" | "studio" | "night";
 
 export const sceneList: { id: SceneId; name: string; note: string }[] = [
-  { id: "road", name: "Country road", note: "Open fields, afternoon sun" },
-  { id: "warehouse", name: "Warehouse", note: "Concrete hall under skylights" },
-  { id: "hangar", name: "Aircraft hangar", note: "A giant arch opening onto daylight" },
+  { id: "architecture", name: "Architecture", note: "Slatted wall, concrete plaza, afternoon sun" },
+  { id: "courtyard", name: "Courtyard", note: "Ivy wall over brick pavers" },
+  { id: "showroom", name: "Showroom", note: "Glass walls, polished floor" },
+  { id: "bigsur", name: "Big Sur", note: "Coastal overlook at golden hour" },
+  { id: "diablo", name: "Mount Diablo", note: "Golden hills at sunset, just up the road" },
   { id: "studio", name: "Studio", note: "Grey cyclorama, softbox reflections" },
   { id: "night", name: "Night drive", note: "City light streaming over the paint" },
 ];
 
 /**
- * Photographic scenes. The visible background is the untouched 8k photo (4k on phones), ground-projected so the
- * car stands on the real floor. A small HDR of the same place lights the car and fills its reflections, and a
- * sun is placed at the HDR's brightest point so shadows fall the way the photo says they should.
+ * Backplate scenes: purpose-made, eye-level location photos (generated with Higgsfield for this site).
+ * The photo fills the frame behind the car, the camera holds the photo's eye level so the floor lines up,
+ * and a sun matched to the photo casts real shadows onto its floor through an invisible shadow catcher.
  */
-type PhotoCfg = { bg: string; hdr: string; height: number; radius: number; env: number; soft: number; sun: number; shadow: number; label: string; mb: number; rot: number };
-export const PHOTO: Partial<Record<SceneId, PhotoCfg>> = {
-  warehouse: { bg: "/scenes/warehouse", hdr: "/scenes/warehouse-1k.hdr", height: 2.6, radius: 70, env: 1.15, soft: 1.0, sun: 1.3, shadow: 0.42, label: "Warehouse", mb: 4, rot: 0 },
-  road: { bg: "/scenes/road", hdr: "/scenes/road-1k.hdr", height: 1.75, radius: 110, env: 0.85, soft: 0.5, sun: 2.4, shadow: 0.55, label: "Country road", mb: 39, rot: -Math.PI / 2 },
-  hangar: { bg: "/scenes/hangar", hdr: "/scenes/hangar-1k.hdr", height: 2.4, radius: 90, env: 1.0, soft: 0.9, sun: 1.4, shadow: 0.45, label: "Aircraft hangar", mb: 47, rot: 0.9 },
+export type PlateCfg = {
+  img: string;
+  horizon: number; // photo's eye-level horizon, fraction from the top
+  floor: number; // where the car stands in the photo, fraction from the top
+  dist: number; // camera distance to the car
+  env: string; // HDR that lights the car and fills reflections
+  envI: number;
+  sun: [number, number, number];
+  sunI: number;
+  sunColor: string;
+  shadow: number;
+  soft: number;
 };
 
-function useBigTextures() {
-  const gl = useThree((st) => st.gl);
-  return useMemo(() => {
-    if (typeof window === "undefined") return false;
-    const phone = window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
-    return !phone && gl.capabilities.maxTextureSize >= 8192;
-  }, [gl]);
-}
+export const PLATES: Partial<Record<SceneId, PlateCfg>> = {
+  architecture: { img: "/scenes/plates/architecture", horizon: 0.47, floor: 0.76, dist: 8.2, env: "/scenes/road-1k.hdr", envI: 0.9, sun: [-6, 7, -4], sunI: 2.2, sunColor: "#fff3e2", shadow: 0.42, soft: 0.6 },
+  courtyard: { img: "/scenes/plates/courtyard", horizon: 0.5, floor: 0.82, dist: 8.2, env: "/scenes/road-1k.hdr", envI: 0.95, sun: [-6, 9, -3], sunI: 2.4, sunColor: "#fff6e8", shadow: 0.45, soft: 0.55 },
+  showroom: { img: "/scenes/plates/showroom", horizon: 0.47, floor: 0.78, dist: 8.4, env: "/hdri/studio_small_09_1k.hdr", envI: 0.85, sun: [2, 10, 4], sunI: 1.1, sunColor: "#ffffff", shadow: 0.35, soft: 1.2 },
+  bigsur: { img: "/scenes/plates/bigsur", horizon: 0.42, floor: 0.8, dist: 8.0, env: "/scenes/road-1k.hdr", envI: 0.8, sun: [7, 3.5, -6], sunI: 2.6, sunColor: "#ffd2a0", shadow: 0.5, soft: 0.45 },
+  diablo: { img: "/scenes/plates/diablo", horizon: 0.32, floor: 0.8, dist: 8.0, env: "/scenes/road-1k.hdr", envI: 0.75, sun: [-7, 3, -6], sunI: 2.6, sunColor: "#ffbf80", shadow: 0.5, soft: 0.4 },
+};
 
-function PhotoBackdrop({ cfg }: { cfg: PhotoCfg }) {
+/**
+ * The photo as a full-frame backdrop, re-fitted every frame so two lines agree with the 3D camera:
+ * the photo's horizon sits on the camera's horizon, and the photo's floor point sits exactly where
+ * the car meets the ground. The car therefore always stands on the photographed floor.
+ */
+function PlateBackground({ cfg }: { cfg: PlateCfg }) {
+  const scene = useThree((st) => st.scene);
   const gl = useThree((st) => st.gl);
-  const big = useBigTextures();
-  // the 4k photo arrives fast; on capable screens the untouched 8k original replaces it once it has streamed in
-  const tex = useLoader(THREE.TextureLoader, `${cfg.bg}-4k.jpg`);
-  const sky = useMemo(() => {
+  const phone = useMemo(() => typeof window !== "undefined" && window.matchMedia("(max-width: 900px), (pointer: coarse)").matches, []);
+  const tex = useLoader(THREE.TextureLoader, `${cfg.img}-${phone ? "2k" : "4k"}.jpg`);
+  const tmp = useMemo(() => ({ dir: new THREE.Vector3(), far: new THREE.Vector3(), contact: new THREE.Vector3() }), []);
+  useEffect(() => {
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = gl.capabilities.getMaxAnisotropy();
+    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
     tex.needsUpdate = true;
-    const m = new GroundedSkybox(tex, cfg.height, cfg.radius, 160);
-    m.position.y = cfg.height - 0.01;
-    m.rotation.y = cfg.rot;
-    m.renderOrder = -1;
-    (m.material as THREE.MeshBasicMaterial).toneMapped = false;
-    return m;
-  }, [tex, cfg, gl]);
-  useEffect(() => {
-    if (!big) return;
-    let cancelled = false;
-    let hi: THREE.Texture | null = null;
-    new THREE.TextureLoader().load(`${cfg.bg}-8k.jpg`, (t) => {
-      if (cancelled) return t.dispose();
-      t.colorSpace = THREE.SRGBColorSpace;
-      t.anisotropy = gl.capabilities.getMaxAnisotropy();
-      const mat = sky.material as THREE.MeshBasicMaterial;
-      mat.map = t;
-      mat.needsUpdate = true;
-      hi = t;
-    });
+    const prev = scene.background;
+    scene.background = tex;
     return () => {
-      cancelled = true;
-      hi?.dispose();
+      scene.background = prev;
     };
-  }, [big, cfg.bg, sky, gl]);
-  useEffect(() => () => sky.geometry.dispose(), [sky]);
-  return <primitive object={sky} />;
+  }, [tex, scene, gl]);
+  useFrame(({ camera, size }) => {
+    const img = tex.image as { width: number; height: number } | undefined;
+    if (!img?.width) return;
+    const toTop = (ndcY: number) => (1 - ndcY) / 2;
+    // camera horizon: a far point straight ahead at eye height
+    camera.getWorldDirection(tmp.dir);
+    tmp.dir.y = 0;
+    tmp.dir.normalize();
+    tmp.far.copy(camera.position).addScaledVector(tmp.dir, 2000).project(camera);
+    const hS = toTop(tmp.far.y);
+    // where the car touches the ground
+    tmp.contact.set(0, 0, 0).project(camera);
+    const cS = toTop(tmp.contact.y);
+    // linear map from photo rows to screen rows: floor line exact, horizon as close as the photo allows
+    const canvasAspect = size.width / size.height;
+    const imgAspect = img.width / img.height;
+    const ideal = (cfg.floor - cfg.horizon) / Math.max(0.05, cS - hS); // visible photo height for a perfect horizon
+    const ry = Math.min(
+      ideal,
+      (1 - cfg.floor) / Math.max(0.02, 1 - cS), // never run past the photo's bottom edge
+      cfg.floor / Math.max(0.02, cS), // or its top edge
+      imgAspect / canvasAspect // or its sides
+    );
+    const rx = (ry * canvasAspect) / imgAspect;
+    const oy = 1 - cfg.floor - ry * (1 - cS);
+    const ox = (1 - rx) / 2;
+    tex.repeat.set(rx, ry);
+    tex.offset.set(ox, oy);
+  });
+  return null;
 }
 
-/** Brightest pixel of the HDR, as a world direction (equirect, three's convention). */
-function sunDirection(tex: THREE.DataTexture) {
-  const { data, width: w, height: h } = tex.image as unknown as { data: Float32Array; width: number; height: number };
-  let best = 0;
-  let bi = 0;
-  for (let i = 0; i < w * h; i++) {
-    const l = data[i * 4] * 0.2126 + data[i * 4 + 1] * 0.7152 + data[i * 4 + 2] * 0.0722;
-    if (l > best) {
-      best = l;
-      bi = i;
-    }
-  }
-  const c = bi % w;
-  const r = Math.floor(bi / w);
-  const u = (c + 0.5) / w;
-  const v = 1 - (r + 0.5) / h;
-  const lat = (v - 0.5) * Math.PI;
-  const lon = (u - 0.5) * Math.PI * 2;
-  const dir = new THREE.Vector3(Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon));
-  // keep the shadow under the car readable even when the brightest point sits low on the horizon
-  if (dir.y < 0.35) dir.y = 0.35;
-  return dir.normalize();
+/** Downward pitch for a plate scene: a photographer standing at eye level. */
+export function platePitch(_cfg: PlateCfg) {
+  return THREE.MathUtils.degToRad(5);
 }
 
-function PhotoLighting({ cfg }: { cfg: PhotoCfg }) {
-  const hdr = useLoader(HDRLoader, cfg.hdr, (l) => l.setDataType(THREE.FloatType)) as THREE.DataTexture;
-  const dir = useMemo(() => {
-    hdr.mapping = THREE.EquirectangularReflectionMapping; // without this the panorama never becomes reflections
-    hdr.needsUpdate = true;
-    return sunDirection(hdr).applyAxisAngle(new THREE.Vector3(0, 1, 0), cfg.rot);
-  }, [hdr, cfg.rot]);
+function PlateLighting({ cfg }: { cfg: PlateCfg }) {
+  const hdr = useLoader(HDRLoader, cfg.env) as THREE.DataTexture;
+  useMemo(() => {
+    hdr.mapping = THREE.EquirectangularReflectionMapping;
+  }, [hdr]);
   const light = useRef<THREE.DirectionalLight>(null!);
   useEffect(() => {
-    const l = light.current;
-    l.target.position.set(0, 0, 0);
-    l.target.updateMatrixWorld();
+    light.current.target.position.set(0, 0, 0);
+    light.current.target.updateMatrixWorld();
   }, []);
   return (
     <>
-      {/* the place's own light, plus studio softboxes a photographer would bring for clean highlight lines */}
-      <Environment map={hdr} environmentIntensity={cfg.env} environmentRotation={[0, cfg.rot, 0]} resolution={512} frames={1}>
+      <Environment map={hdr} environmentIntensity={cfg.envI} resolution={512} frames={1}>
         <Lightformer intensity={cfg.soft} rotation-x={Math.PI / 2} position={[0, 7, 0]} scale={[8, 2.5, 1]} />
-        <Lightformer intensity={cfg.soft * 1.4} rotation-y={Math.PI / 2} position={[-7, 1.6, 0]} scale={[12, 0.4, 1]} />
-        <Lightformer intensity={cfg.soft * 1.4} rotation-y={-Math.PI / 2} position={[7, 1.6, 0]} scale={[12, 0.4, 1]} />
+        <Lightformer intensity={cfg.soft * 1.3} rotation-y={Math.PI / 2} position={[-7, 1.6, 0]} scale={[12, 0.4, 1]} />
+        <Lightformer intensity={cfg.soft * 1.3} rotation-y={-Math.PI / 2} position={[7, 1.6, 0]} scale={[12, 0.4, 1]} />
       </Environment>
       <directionalLight
         ref={light}
-        position={dir.clone().multiplyScalar(14).toArray()}
-        intensity={cfg.sun}
+        position={cfg.sun}
+        intensity={cfg.sunI}
+        color={cfg.sunColor}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0004}
         shadow-normalBias={0.03}
-        shadow-radius={6}
-        shadow-camera-left={-4.5}
-        shadow-camera-right={4.5}
-        shadow-camera-top={4.5}
-        shadow-camera-bottom={-4.5}
-        shadow-camera-near={1}
+        shadow-radius={8}
+        shadow-camera-left={-5}
+        shadow-camera-right={5}
+        shadow-camera-top={5}
+        shadow-camera-bottom={-5}
+        shadow-camera-near={0.5}
         shadow-camera-far={40}
       />
       <mesh rotation-x={-Math.PI / 2} position={[0, 0.002, 0]} receiveShadow renderOrder={1}>
-        <planeGeometry args={[24, 24]} />
+        <planeGeometry args={[30, 30]} />
         <shadowMaterial transparent opacity={cfg.shadow} depthWrite={false} />
       </mesh>
-      <ContactShadows position={[0, 0.004, 0]} opacity={0.75} scale={10} blur={2.2} far={2.2} resolution={1024} color="#000000" />
-      <ContactShadows position={[0, 0.006, 0]} opacity={0.8} scale={6} blur={0.8} far={0.5} resolution={1024} color="#000000" />
+      <ContactShadows position={[0, 0.004, 0]} opacity={0.7} scale={10} blur={2.4} far={2.2} resolution={1024} color="#000000" />
+      <ContactShadows position={[0, 0.006, 0]} opacity={0.85} scale={6} blur={0.8} far={0.5} resolution={1024} color="#000000" />
     </>
   );
 }
@@ -297,14 +298,14 @@ function Floor({ scene, quality }: { scene: SceneId; quality: "high" | "low" }) 
 }
 
 export function Stage({ scene, quality = "high", cursor = false }: { scene: SceneId; quality?: "high" | "low"; cursor?: boolean }) {
-  const photo = PHOTO[scene];
-  if (photo)
+  const plate = PLATES[scene];
+  if (plate)
     return (
       <>
         <color attach="background" args={["#14171c"]} />
         <Suspense fallback={null}>
-          <PhotoLighting cfg={photo} />
-          <PhotoBackdrop cfg={photo} />
+          <PlateLighting cfg={plate} />
+          <PlateBackground cfg={plate} />
         </Suspense>
       </>
     );

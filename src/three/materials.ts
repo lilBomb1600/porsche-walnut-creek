@@ -283,15 +283,15 @@ export function makeLampMaterial(src: THREE.MeshStandardMaterial, uniforms: Lamp
         /* glsl */ `#include <emissivemap_fragment>
         float isFront = step(0.0, vCarPos.z);
         float reveal = smoothstep(uReveal + 0.03, uReveal - 0.03, abs(vCarPos.x));
-        vec3 lamp = mix(vec3(1.0, 0.02, 0.05) * uTail * reveal * 11.0, vec3(0.92, 0.96, 1.0) * uDrl * 5.0, isFront);
+        vec3 lamp = mix(vec3(1.0, 0.04, 0.06) * uTail * reveal * 3.2, vec3(0.92, 0.96, 1.0) * uDrl * 3.0, isFront);
         // textured lenses keep their pattern but never go fully dark when lit
         float texLum = max(totalEmissiveRadiance.r, max(totalEmissiveRadiance.g, totalEmissiveRadiance.b));
         ${opts.band
           ? "totalEmissiveRadiance = lamp * (1.0 - 0.72 * smoothstep(0.35, 0.8, texLum)); // the band burns red, its lettering stays dark"
-          : "totalEmissiveRadiance = lamp * (0.55 + 0.45 * texLum);"}`
+          : "totalEmissiveRadiance = lamp * (0.25 + 0.75 * texLum);"}`
       );
   };
-  m.customProgramCacheKey = () => (opts.band ? "pwc-lamp-band-v4" : "pwc-lamp-v4");
+  m.customProgramCacheKey = () => (opts.band ? "pwc-lamp-band-v5" : "pwc-lamp-v5");
   return m;
 }
 

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowRight } from "lucide-react";
 import { FourPoints } from "@/components/ui/FourPoints";
-import { Ignite } from "@/components/fx/Ignite";
+import { PorscheWordmark } from "@/components/PorscheMark";
 import { LampLink } from "@/components/ui/lamp";
 import { dealership } from "@/data/dealership";
 import { departmentStatus } from "@/lib/hours";
@@ -184,9 +184,13 @@ export function HomeStory() {
           style={{ visibility: "hidden" }}
         >
           <div className="max-w-[1400px]">
-            <h1 className="font-livery text-[clamp(44px,9vw,138px)] leading-[0.84] text-drl">
-              <Ignite text={"Porsche\nWalnut Creek"} lit={lit} stagger={38} />
-            </h1>
+            <h1 className="sr-only">Porsche Walnut Creek</h1>
+            <div aria-hidden data-lit={lit} className="max-w-[min(680px,84vw)]">
+              <div className="hero-mark">
+                <PorscheWordmark className="h-auto w-full text-white drop-shadow-[0_0_30px_rgb(170_200_255/.25)]" />
+              </div>
+              <p className="hero-sub font-mark-caps mt-[clamp(12px,1.6vw,22px)] text-[clamp(11px,1.5vw,18px)] text-white/85">Walnut Creek</p>
+            </div>
             <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <p className="max-w-[46ch] text-[16px] leading-relaxed text-drl-2 sm:text-[17px] text-pretty">
                 See your Porsche in its best light. Pick the paint, wrap it in film, tint it and coat it on a live 911 before
@@ -235,7 +239,7 @@ export function HomeStory() {
               <span aria-hidden className="block h-2 w-2 rounded-full" style={{ background: beatColor[b.id], boxShadow: `0 0 10px ${beatColor[b.id]}` }} />
               {b.label}
             </span>
-            <h2 className="font-livery text-[clamp(30px,4.4vw,62px)] leading-[0.92] text-drl text-balance">
+            <h2 className="font-livery text-[clamp(22px,3vw,40px)] leading-[1.12] text-drl text-balance">
               {captions[b.id].title}
             </h2>
             <p className="mt-4 max-w-[44ch] text-[15.5px] leading-relaxed text-drl-2 sm:text-[17px] text-pretty">{captions[b.id].body}</p>
@@ -248,7 +252,7 @@ export function HomeStory() {
           className="absolute inset-x-0 bottom-0 z-10 px-5 pb-[max(32px,8vh)] opacity-0 sm:px-8 lg:px-12"
           style={{ visibility: "hidden" }}
         >
-          <h2 className="font-livery text-[clamp(44px,8.4vw,126px)] leading-[0.86] text-drl">
+          <h2 className="font-livery text-[clamp(32px,5.6vw,84px)] leading-[1] text-drl">
             Now build yours.
           </h2>
           <div className="mt-7 flex flex-wrap items-center gap-3">

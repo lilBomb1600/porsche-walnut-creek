@@ -5,6 +5,7 @@ import { useCallback, useRef } from "react";
 import { carById } from "@/data/cars";
 import { paintById, swatchBackground } from "@/data/paints";
 import { useStudio, type ViewId } from "@/lib/studio-store";
+import { PLATES } from "@/three/Stage";
 
 const views: { id: ViewId; label: string }[] = [
   { id: "orbit", label: "Orbit" },
@@ -32,6 +33,8 @@ export function StageTitle() {
 }
 
 export function ViewDock() {
+  const scene = useStudio((s) => s.scene);
+  const plate = !!PLATES[scene];
   const view = useStudio((s) => s.view);
   const setView = useStudio((s) => s.setView);
   const compare = useStudio((s) => s.compare);
@@ -39,7 +42,7 @@ export function ViewDock() {
   return (
     <div className="absolute inset-x-3 bottom-3 z-10 flex flex-wrap items-end justify-between gap-2 sm:inset-x-6 sm:bottom-6">
       <div role="group" aria-label="Camera" className="glass relative flex rounded-full p-1">
-        {views.map((v) => (
+        {views.filter((v) => !(plate && v.id === "top")).map((v) => (
           <button
             key={v.id}
             type="button"

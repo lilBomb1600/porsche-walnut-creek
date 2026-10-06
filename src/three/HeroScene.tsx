@@ -251,8 +251,7 @@ export default function HeroScene({ onReady, active = true }: { onReady: () => v
       <Suspense fallback={null}>
         <Stage scene="night" quality={quality} cursor />
         <CarModel spec={spec} rig={rig} />
-        <LightStrip />
-        <Effects quality={quality} bloom={0.75} />
+        <Effects quality={quality} bloom={0.4} />
         <ReadyFlag onReady={onReady} />
         <Director rig={rig} />
       </Suspense>

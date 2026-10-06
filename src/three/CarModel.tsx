@@ -337,15 +337,15 @@ function LampGlow({ spec, rig }: { spec: CarSpec; rig: React.RefObject<CarRig> }
     const r = rig.current;
     if (!r) return;
     const t = r.tail * Math.min(1, r.reveal * 1.6);
-    tailMats.current.forEach((m) => (m.opacity = 0.6 * t));
-    headMats.current.forEach((m) => (m.opacity = 0.5 * r.drl));
-    tailLights.current.forEach((l) => l && (l.intensity = 0.9 * t));
+    tailMats.current.forEach((m) => (m.opacity = 0.18 * t));
+    headMats.current.forEach((m) => (m.opacity = 0.22 * r.drl));
+    tailLights.current.forEach((l) => l && (l.intensity = 0.3 * t));
   });
   return (
     <group>
       {spec.glow.tail.map((p, i) => (
         <group key={`t${i}`} position={p}>
-          <sprite material={tails[i]} scale={[0.8, 0.34, 1]} />
+          <sprite material={tails[i]} scale={[0.55, 0.22, 1]} />
           <pointLight
             ref={(l) => void (l && (tailLights.current[i] = l))}
             color="#ff1626"
@@ -355,7 +355,7 @@ function LampGlow({ spec, rig }: { spec: CarSpec; rig: React.RefObject<CarRig> }
           />
         </group>
       ))}
-      {band && spec.glow.band && <sprite material={band} position={spec.glow.band} scale={[1.5, 0.26, 1]} />}
+      {band && spec.glow.band && <sprite material={band} position={spec.glow.band} scale={[1.1, 0.16, 1]} />}
       {spec.glow.head.map((p, i) => (
         <sprite key={`h${i}`} material={heads[i]} position={p} scale={[0.5, 0.5, 1]} />
       ))}

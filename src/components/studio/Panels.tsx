@@ -357,9 +357,11 @@ function SceneGlyph({ id }: { id: SceneId }) {
   const c = { stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, fill: "none" };
   return (
     <svg viewBox="0 0 40 28" className="h-7 w-10" aria-hidden>
-      {id === "warehouse" && <g {...c}><path d="M4 24V10l16-6 16 6v14M4 24h32M12 13h4M24 13h4M18 24v-7h4v7" /></g>}
-      {id === "road" && <g {...c}><path d="M3 24h34M16 24l3-14M24 24l-3-14M20 22v-2M20 17v-2M20 12v-1M6 9c2-2 4-2 6 0M28 7c2-2 4-2 6 0" /></g>}
-      {id === "hangar" && <g {...c}><path d="M3 24c0-11 7.6-18 17-18s17 7 17 18M3 24h34M13 24c0-5 3-8 7-8s7 3 7 8" /></g>}
+      {id === "architecture" && <g {...c}><path d="M4 24h32M7 24V8M13 24V8M19 24V8M25 24V8M31 24V8M5 8h30" /></g>}
+      {id === "courtyard" && <g {...c}><path d="M3 24h34M5 20V10h30v10M9 10c2-3 5-3 7 0M22 10c2-4 6-4 8 0" /></g>}
+      {id === "showroom" && <g {...c}><path d="M3 24h34M6 24V7h28v17M13 7v17M20 7v17M27 7v17" /></g>}
+      {id === "bigsur" && <g {...c}><path d="M3 24h34M3 18c6-1 8-9 14-10M22 16h15M26 12c2-1 4-1 6 0" /></g>}
+      {id === "diablo" && <g {...c}><path d="M3 24h34M3 19l9-7 5 3 7-9 13 13" /><circle cx="8" cy="7" r="2" /></g>}
       {id === "studio" && <g {...c}><path d="M4 6h32M4 14h32M4 22h32" /></g>}
       {id === "night" && <g {...c}><circle cx="8" cy="6" r="2" fill="currentColor" /><circle cx="20" cy="6" r="2" fill="currentColor" /><circle cx="32" cy="6" r="2" fill="currentColor" /><path d="M3 22l34-2" /></g>}
     </svg>

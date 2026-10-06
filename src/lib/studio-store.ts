@@ -76,7 +76,7 @@ export const useStudio = create<StudioState>((set, get) => ({
   ...baseConfig(),
   step: "paint",
   visited: ["car", "paint"],
-  scene: "road",
+  scene: "architecture",
   view: "orbit",
   viewNonce: 0,
   compare: false,

@@ -4,6 +4,7 @@ import { HomeStory } from "@/components/home/HomeStory";
 import { Lineup } from "@/components/home/Lineup";
 import { Heritage } from "@/components/home/Heritage";
 import { History } from "@/components/home/History";
+import { Legends } from "@/components/home/Legends";
 import { Buying, Service, StudioModes, Visit } from "@/components/home/Sections";
 import { Footer } from "@/components/home/Footer";
 import { CursorLamp } from "@/components/fx/CursorLamp";
@@ -20,6 +21,7 @@ export default function Home() {
         <StudioModes />
         <LedTicker />
         <Lineup />
+        <Legends />
         <Heritage />
         <History />
         <Service />

@@ -5,7 +5,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { CameraControls, PerformanceMonitor, useProgress } from "@react-three/drei";
 import { CarModel, defaultRig, type CarRig } from "@/three/CarModel";
-import { Effects, PHOTO, Stage } from "@/three/Stage";
+import { Effects, PLATES, Stage, platePitch, sceneList } from "@/three/Stage";
 import { vltToDark } from "@/three/materials";
 import { carById } from "@/data/cars";
 import { paintById } from "@/data/paints";
@@ -41,7 +41,7 @@ function RigSync({ rig }: { rig: React.RefObject<CarRig> }) {
       r.wsStrip = s.windshield === "strip" ? 1 : 0;
       r.testStrip = s.testStrip ? 1 : 0;
       r.ceramic = s.ceramic > 0 ? 0.55 + s.ceramic / 16 : 0;
-      const lit = s.scene === "night" || s.scene === "studio";
+      const lit = s.scene === "night" || s.scene === "studio" || s.scene === "diablo";
       r.drl = lit ? 1 : 0.7;
       r.tail = lit ? 1 : 0.35;
       r.reveal = 1;
@@ -58,23 +58,47 @@ function RigSync({ rig }: { rig: React.RefObject<CarRig> }) {
   return null;
 }
 
+const AZIMUTH: Record<ViewId, number> = { orbit: 0.7, front: 0.45, side: Math.PI / 2, rear: Math.PI - 0.45, top: 0.7 };
+
 function CameraRig() {
   const ref = useRef<CameraControls>(null!);
   const view = useStudio((s) => s.view);
   const nonce = useStudio((s) => s.viewNonce);
+  const scene = useStudio((s) => s.scene);
   const size = useThree((s) => s.size);
   const reduced = useRef(false);
   useEffect(() => {
     reduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }, []);
+  const plate = PLATES[scene];
   // pull back on narrow stages so the whole car stays in frame
   const fit = Math.max(1, 1.1 / (size.width / Math.max(1, size.height)));
   useEffect(() => {
+    const c = ref.current;
+    if (!c) return;
+    if (plate) {
+      // eye level, like the photographer who shot the backdrop: only the azimuth moves
+      const polar = Math.PI / 2 - platePitch(plate);
+      c.minPolarAngle = polar;
+      c.maxPolarAngle = polar;
+      const d = plate.dist * fit;
+      c.minDistance = d * 0.85;
+      c.maxDistance = d * 1.15;
+      const az = AZIMUTH[view];
+      const t = new THREE.Vector3(0, 0.62, 0);
+      const p = new THREE.Vector3().setFromSphericalCoords(d, polar, az).add(t);
+      c.setLookAt(p.x, p.y, p.z, t.x, t.y, t.z, !reduced.current);
+      return;
+    }
+    c.minPolarAngle = 0;
+    c.maxPolarAngle = Math.PI / 2 - 0.04;
+    c.minDistance = 3.2;
+    c.maxDistance = 22;
     const v = VIEWS[view];
     const t = new THREE.Vector3(...v.target);
     const p = new THREE.Vector3(...v.pos).sub(t).multiplyScalar(view === "top" ? Math.max(1, fit * 0.85) : fit).add(t);
-    ref.current?.setLookAt(p.x, p.y, p.z, t.x, t.y, t.z, !reduced.current);
-  }, [view, nonce, fit]);
+    c.setLookAt(p.x, p.y, p.z, t.x, t.y, t.z, !reduced.current);
+  }, [view, nonce, fit, plate]);
   return (
     <CameraControls
       ref={ref}
@@ -127,16 +151,20 @@ export function StudioLoader({ ready }: { ready: boolean }) {
   );
 }
 
+function sceneLabel(id: string) {
+  return sceneList.find((x) => x.id === id)?.name ?? "scene";
+}
+
 /** While a new background streams in, the car stays put and a small chip reports progress. */
 function SceneLoading({ ready }: { ready: boolean }) {
   const { active, progress } = useProgress();
   const scene = useStudio((s) => s.scene);
-  const cfg = PHOTO[scene];
+  const cfg = PLATES[scene] ? sceneLabel(scene) : null;
   if (!ready || !active || !cfg) return null;
   return (
     <div className="glass pointer-events-none absolute left-1/2 top-6 z-20 flex -translate-x-1/2 items-center gap-3 rounded-full px-4 py-2 text-[13px] font-medium text-white" role="status">
       <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-      Loading {cfg.label} · {Math.round(progress)}%
+      Loading {cfg} · {Math.round(progress)}%
     </div>
   );
 }
@@ -165,7 +193,7 @@ export default function StudioCanvas() {
           <Stage scene={scene} quality={quality} />
           <CarModel key={spec.id} spec={spec} rig={rig} />
           <CoveragePins spec={spec} />
-          <Effects quality={quality} bloom={scene === "night" ? 0.75 : scene === "studio" ? 0.3 : 0.2} />
+          <Effects quality={quality} bloom={scene === "night" ? 0.5 : scene === "studio" ? 0.3 : 0.18} />
           <ReadySignal onReady={() => setReady(true)} />
         </Suspense>
         <RigSync rig={rig} />

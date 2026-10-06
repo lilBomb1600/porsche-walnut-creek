@@ -37,7 +37,7 @@ export function LitHeading({
   }, []);
   return (
     <div ref={ref} className="lit-heading" data-on={on}>
-      <Tag className={clsx("font-livery text-balance text-drl", className)}>
+      <Tag className={clsx(!className?.includes("font-mark-caps") && "font-livery", "text-balance text-drl", className)}>
         {typeof children === "string" ? <Ignite text={children} lit={on} stagger={18} /> : children}
       </Tag>
       {line && (
