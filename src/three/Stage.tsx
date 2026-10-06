@@ -40,11 +40,11 @@ export type PlateCfg = {
 };
 
 export const PLATES: Partial<Record<SceneId, PlateCfg>> = {
-  architecture: { img: "/scenes/plates/architecture", horizon: 0.47, floor: 0.76, dist: 8.2, env: "/scenes/road-1k.hdr", envI: 0.9, sun: [-6, 7, -4], sunI: 2.2, sunColor: "#fff3e2", shadow: 0.42, soft: 0.6 },
-  courtyard: { img: "/scenes/plates/courtyard", horizon: 0.5, floor: 0.82, dist: 8.2, env: "/scenes/road-1k.hdr", envI: 0.95, sun: [-6, 9, -3], sunI: 2.4, sunColor: "#fff6e8", shadow: 0.45, soft: 0.55 },
-  showroom: { img: "/scenes/plates/showroom", horizon: 0.47, floor: 0.78, dist: 8.4, env: "/hdri/studio_small_09_1k.hdr", envI: 0.85, sun: [2, 10, 4], sunI: 1.1, sunColor: "#ffffff", shadow: 0.35, soft: 1.2 },
-  bigsur: { img: "/scenes/plates/bigsur", horizon: 0.42, floor: 0.8, dist: 8.0, env: "/scenes/road-1k.hdr", envI: 0.8, sun: [7, 3.5, -6], sunI: 2.6, sunColor: "#ffd2a0", shadow: 0.5, soft: 0.45 },
-  diablo: { img: "/scenes/plates/diablo", horizon: 0.32, floor: 0.8, dist: 8.0, env: "/scenes/road-1k.hdr", envI: 0.75, sun: [-7, 3, -6], sunI: 2.6, sunColor: "#ffbf80", shadow: 0.5, soft: 0.4 },
+  architecture: { img: "/scenes/plates/architecture", horizon: 0.47, floor: 0.7, dist: 8.2, env: "/scenes/road-1k.hdr", envI: 0.9, sun: [-6, 7, -4], sunI: 2.2, sunColor: "#fff3e2", shadow: 0.42, soft: 0.6 },
+  courtyard: { img: "/scenes/plates/courtyard", horizon: 0.5, floor: 0.76, dist: 8.2, env: "/scenes/road-1k.hdr", envI: 0.95, sun: [-6, 9, -3], sunI: 2.4, sunColor: "#fff6e8", shadow: 0.45, soft: 0.55 },
+  showroom: { img: "/scenes/plates/showroom", horizon: 0.47, floor: 0.72, dist: 8.4, env: "/hdri/studio_small_09_1k.hdr", envI: 0.85, sun: [2, 10, 4], sunI: 1.1, sunColor: "#ffffff", shadow: 0.35, soft: 1.2 },
+  bigsur: { img: "/scenes/plates/bigsur", horizon: 0.42, floor: 0.72, dist: 8.0, env: "/scenes/road-1k.hdr", envI: 0.8, sun: [7, 3.5, -6], sunI: 2.0, sunColor: "#ffd2a0", shadow: 0.5, soft: 0.45 },
+  diablo: { img: "/scenes/plates/diablo", horizon: 0.32, floor: 0.72, dist: 8.0, env: "/scenes/road-1k.hdr", envI: 0.75, sun: [-7, 3, -6], sunI: 1.8, sunColor: "#ffbf80", shadow: 0.5, soft: 0.4 },
 };
 
 /**

@@ -51,7 +51,7 @@ export function CarPanel() {
   const setCar = useStudio((s) => s.setCar);
   return (
     <div>
-      <PanelHead title="Pick the car" intro="Two generations of 911, fifty years apart. Every option in the studio works on both." />
+      <PanelHead title="Pick the car" intro="Four Porsches, from the 1975 Turbo to the all-electric Taycan. Every option in the studio works on all of them." />
       <div role="radiogroup" aria-label="Car" className="space-y-1">
         {cars.map((c) => (
           <OptionRow
@@ -59,7 +59,7 @@ export function CarPanel() {
             selected={car === c.id}
             onSelect={() => setCar(c.id)}
             title={<span className="font-display text-[17px] font-extrabold tracking-[0.01em]">{c.name}</span>}
-            note={c.id === "911" ? "991 generation, all-wheel drive" : "The original whale-tail Turbo, 1975"}
+            note={c.note}
             aside={<span className="text-drl-dim">{c.year}</span>}
           />
         ))}

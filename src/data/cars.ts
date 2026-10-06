@@ -20,6 +20,7 @@ export type CarZones = {
   sideMaxZ: number;
   wsZ: number; // combined glass: windshield ahead of this z
   sideAbsX: number; // combined glass: side windows beyond this |x|
+  glassMinY?: number; // combined glass below this height is a lamp lens, never tinted
 };
 
 export type AnchorId =
@@ -40,6 +41,7 @@ export type CarSpec = {
   name: string;
   year: string;
   short: string;
+  note: string;
   file: string;
   scale: number;
   offset: [number, number, number]; // applied in model units before scale
@@ -73,6 +75,7 @@ export const cars: CarSpec[] = [
     name: "911 Carrera 4S",
     year: "991",
     short: "911 C4S",
+    note: "991 generation, all-wheel drive",
     file: "/models/911-carrera-4s.glb",
     scale: 1,
     offset: [0, 0.633, -0.076],
@@ -144,6 +147,7 @@ export const cars: CarSpec[] = [
     name: "911 Turbo (930)",
     year: "1975",
     short: "930 Turbo",
+    note: "The original whale-tail Turbo",
     file: "/models/930-turbo.glb",
     scale: 0.88,
     offset: [0, 0, -0.207],
@@ -204,6 +208,143 @@ export const cars: CarSpec[] = [
       license: "CC BY 4.0",
       licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
       source: "https://sketchfab.com/3d-models/free-1975-porsche-911-930-turbo-8568d9d14a994b9cae59499f0dbed21e",
+    },
+  },
+  {
+    id: "gt3",
+    name: "911 GT3",
+    year: "992",
+    short: "911 GT3",
+    note: "4.0 L, 9,000 rpm, the purist's 911",
+    file: "/models/911-gt3-992.glb",
+    scale: 1,
+    offset: [0, 0, 0],
+    defaultPaint: "shark-blue",
+    materials: {
+      paint: ["GT3_Paint"],
+      hideMaterials: ["Rear badge | original flat decal hidden"],
+      glassMaterial: "GT3 | smoked automotive glass.001",
+      lampMaterials: ["GT3_TaillightLED", "GT3 | ruby tail lamp lens", "GT3_HeadlightLED"],
+      plates: [],
+    },
+    zones: {
+      frontZ: 2.281,
+      rearZ: -2.289,
+      partialZ: 1.44,
+      fullZ: 0.92,
+      mirrorMin: [0.84, 0.84, 0.52],
+      mirrorMax: [1.2, 1.12, 0.88],
+      rocker: [0.33, 0.85, -1.0, 1.0],
+      apA: [0.68, 0.88, 0.9],
+      apB: [0.58, 1.22, 0.25],
+      apR: 0.07,
+      bPillarZ: -0.45,
+      stripY: 1.1,
+      sideMinZ: -1.15,
+      sideMaxZ: 0.45,
+      wsZ: 0.3,
+      sideAbsX: 0.7,
+      glassMinY: 0.84,
+    },
+    bandAnchor: [0, 0.86, -2.2],
+    glow: {
+      tail: [
+        [-0.62, 0.86, -2.17],
+        [0.62, 0.86, -2.17],
+      ],
+      band: [0, 0.86, -2.2],
+      head: [
+        [-0.7, 0.69, 1.7],
+        [0.7, 0.69, 1.7],
+      ],
+    },
+    anchors: {
+      bumper: [0, 0.35, 2.24],
+      hood: [0, 0.72, 1.6],
+      fender: [0.88, 0.66, 1.42],
+      mirror: [0.98, 0.96, 0.68],
+      rocker: [0.92, 0.25, 0.3],
+      apillar: [0.66, 1.05, 0.6],
+      roof: [0, 1.28, -0.3],
+      windshield: [0, 1.05, 0.55],
+      sideWindow: [0.78, 1.0, -0.15],
+      rearWindow: [0, 1.06, -1.3],
+      body: [-0.95, 0.75, -0.95],
+    },
+    credit: {
+      title: "2022 Porsche 911 GT3 (992)",
+      author: "Ddiaz Design (web adaptation by chunyuancx)",
+      license: "used with creator permission",
+      licenseUrl: "https://sketchfab.com/3d-models/2022-porsche-911-gt3-992-ba01afbaf32846e598db315be3507db3",
+      source: "https://sketchfab.com/3d-models/2022-porsche-911-gt3-992-ba01afbaf32846e598db315be3507db3",
+    },
+  },
+  {
+    id: "taycan",
+    name: "Taycan",
+    year: "2020s",
+    short: "Taycan",
+    note: "All-electric, with the full-width light bar",
+    file: "/models/taycan.glb",
+    scale: 1,
+    offset: [0, 0.042, 0],
+    defaultPaint: "gentian-blue",
+    materials: {
+      paint: ["corpus1"],
+      glassMaterial: "glass2",
+      lampMaterials: ["red_headlight", "headlight_white_color"],
+      plates: [],
+    },
+    zones: {
+      frontZ: 2.472,
+      rearZ: -2.484,
+      partialZ: 1.64,
+      fullZ: 1.1,
+      mirrorMin: [0.86, 0.95, 0.4],
+      mirrorMax: [1.2, 1.3, 0.65],
+      rocker: [0.42, 0.9, -1.2, 1.35],
+      apA: [0.75, 0.98, 1.05],
+      apB: [0.62, 1.33, 0.25],
+      apR: 0.07,
+      bPillarZ: -0.3,
+      stripY: 1.25,
+      sideMinZ: -1.5,
+      sideMaxZ: 0.9,
+      wsZ: 0.55,
+      sideAbsX: 0.74,
+      glassMinY: 0.95,
+    },
+    bandAnchor: [0, 0.903, -2.28],
+    glow: {
+      tail: [
+        [-0.6, 0.9, -2.3],
+        [0.6, 0.9, -2.3],
+      ],
+      band: [0, 0.903, -2.3],
+      head: [
+        [-0.75, 0.73, 2.05],
+        [0.75, 0.73, 2.05],
+      ],
+    },
+    anchors: {
+      bumper: [0, 0.45, 2.42],
+      hood: [0, 0.92, 1.8],
+      fender: [0.96, 0.86, 1.6],
+      mirror: [1.06, 1.12, 0.52],
+      rocker: [0.99, 0.36, 0.1],
+      apillar: [0.72, 1.15, 0.72],
+      roof: [0, 1.4, -0.3],
+      windshield: [0, 1.15, 0.78],
+      sideWindow: [0.83, 1.12, -0.25],
+      rearWindow: [0, 1.22, -1.6],
+      body: [-1.0, 0.8, -1.2],
+    },
+    credit: {
+      title: "Porshe Taycan",
+      author: "Mikhail Hamanovich (web adaptation by Rajdeep Pandey)",
+      license: "CC BY 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+      source: "https://sketchfab.com/3d-models/porshe-taycan-c6004141452e4d3ab048bf0fee52666d",
     },
   },
 ];

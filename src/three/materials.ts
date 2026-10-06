@@ -181,6 +181,7 @@ export function createGlassUniforms(zones: CarZones) {
     uStripY: { value: zones.stripY },
     uWsZ: { value: zones.wsZ },
     uSideX: { value: zones.sideAbsX },
+    uGlassMinY: { value: zones.glassMinY ?? -10 },
     uFrontDark: { value: 0 },
     uRearDark: { value: 0 },
     uWsDark: { value: 0 },
@@ -217,7 +218,7 @@ export function makeGlassMaterial(kind: GlassKind, uniforms: GlassUniforms) {
         "#include <common>",
         /* glsl */ `#include <common>
         varying vec3 vCarPos;
-        uniform float uBPillar, uStripY, uWsZ, uSideX, uFrontDark, uRearDark, uWsDark, uWsStrip, uTestStrip, uSplit;
+        uniform float uBPillar, uStripY, uWsZ, uSideX, uGlassMinY, uFrontDark, uRearDark, uWsDark, uWsStrip, uTestStrip, uSplit;
         uniform vec2 uStripRange;`
       )
       .replace(
@@ -237,12 +238,13 @@ export function makeGlassMaterial(kind: GlassKind, uniforms: GlassUniforms) {
         } else {
           dark = uRearDark;
         }
+        if (vCarPos.y < uGlassMinY) dark = 0.0;
         if (uSplit >= 0.0 && gl_FragCoord.x < uSplit) dark = 0.0;
         diffuseColor.a = mix(diffuseColor.a, 0.975, dark);
         diffuseColor.rgb *= (1.0 - 0.75 * dark);`
       );
   };
-  m.customProgramCacheKey = () => `pwc-glass-${kind}-v2`;
+  m.customProgramCacheKey = () => `pwc-glass-${kind}-v3`;
   return m;
 }
 
@@ -283,7 +285,7 @@ export function makeLampMaterial(src: THREE.MeshStandardMaterial, uniforms: Lamp
         /* glsl */ `#include <emissivemap_fragment>
         float isFront = step(0.0, vCarPos.z);
         float reveal = smoothstep(uReveal + 0.03, uReveal - 0.03, abs(vCarPos.x));
-        vec3 lamp = mix(vec3(1.0, 0.04, 0.06) * uTail * reveal * 3.2, vec3(0.92, 0.96, 1.0) * uDrl * 3.0, isFront);
+        vec3 lamp = mix(vec3(1.0, 0.04, 0.06) * uTail * reveal * 3.2, vec3(0.92, 0.96, 1.0) * uDrl * 1.8, isFront);
         // textured lenses keep their pattern but never go fully dark when lit
         float texLum = max(totalEmissiveRadiance.r, max(totalEmissiveRadiance.g, totalEmissiveRadiance.b));
         ${opts.band
@@ -291,7 +293,7 @@ export function makeLampMaterial(src: THREE.MeshStandardMaterial, uniforms: Lamp
           : "totalEmissiveRadiance = lamp * (0.25 + 0.75 * texLum);"}`
       );
   };
-  m.customProgramCacheKey = () => (opts.band ? "pwc-lamp-band-v5" : "pwc-lamp-v5");
+  m.customProgramCacheKey = () => (opts.band ? "pwc-lamp-band-v6" : "pwc-lamp-v6");
   return m;
 }
 

@@ -41,8 +41,8 @@ function RigSync({ rig }: { rig: React.RefObject<CarRig> }) {
       r.wsStrip = s.windshield === "strip" ? 1 : 0;
       r.testStrip = s.testStrip ? 1 : 0;
       r.ceramic = s.ceramic > 0 ? 0.55 + s.ceramic / 16 : 0;
-      const lit = s.scene === "night" || s.scene === "studio" || s.scene === "diablo";
-      r.drl = lit ? 1 : 0.7;
+      const lit = s.scene === "night" || s.scene === "studio";
+      r.drl = lit ? 1 : 0.35;
       r.tail = lit ? 1 : 0.35;
       r.reveal = 1;
       r.split = s.compare ? s.split * widthRef.current : -1;
@@ -85,7 +85,7 @@ function CameraRig() {
       c.minDistance = d * 0.85;
       c.maxDistance = d * 1.15;
       const az = AZIMUTH[view];
-      const t = new THREE.Vector3(0, 0.62, 0);
+      const t = new THREE.Vector3(0, 0.95, 0);
       const p = new THREE.Vector3().setFromSphericalCoords(d, polar, az).add(t);
       c.setLookAt(p.x, p.y, p.z, t.x, t.y, t.z, !reduced.current);
       return;
