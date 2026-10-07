@@ -5,13 +5,13 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowRight } from "lucide-react";
-import { FourPoints } from "@/components/ui/FourPoints";
 import { PorscheWordmark } from "@/components/PorscheMark";
 import { LampLink } from "@/components/ui/lamp";
 import { dealership } from "@/data/dealership";
 import { departmentStatus } from "@/lib/hours";
 import { DOCK_END, beats, range, story } from "@/lib/story";
 import { useRaf } from "@/lib/use-raf";
+import { RaceLoader } from "./RaceLoader";
 
 const HeroScene = dynamic(() => import("@/three/HeroScene"), { ssr: false });
 
@@ -66,6 +66,8 @@ export function HomeStory() {
   const section = useRef<HTMLElement>(null);
   const [ready, setReady] = useState(false);
   const [loaderGone, setLoaderGone] = useState(false);
+  const [loaded, setLoaded] = useState(0);
+  const [go, setGo] = useState(false);
   const [active, setActive] = useState(true);
   const [lit, setLit] = useState(false);
   const litRef = useRef(false);
@@ -92,12 +94,13 @@ export function HomeStory() {
     };
   }, []);
 
+  // The hero's intro waits for the green light, so it plays as the loader lifts, not behind it.
   useEffect(() => {
-    if (!ready) return;
+    if (!go) return;
     story.ready = true;
-    const t = setTimeout(() => setLoaderGone(true), 900);
+    const t = setTimeout(() => setLoaderGone(true), 800);
     return () => clearTimeout(t);
-  }, [ready]);
+  }, [go]);
 
   useRaf(() => {
     const p = story.p;
@@ -159,21 +162,17 @@ export function HomeStory() {
     <section ref={section} id="top" className="relative h-[620vh]" aria-label="Porsche Walnut Creek">
       <div className="sticky top-0 h-[100dvh] overflow-hidden">
         <div className="absolute inset-0">
-          <HeroScene active={active} onReady={() => setReady(true)} />
+          <HeroScene active={active} onReady={() => setReady(true)} onProgress={setLoaded} />
         </div>
 
-        {/* ignition loader */}
+        {/* race-track loader */}
         {!loaderGone && (
           <div
             className="absolute inset-0 z-20 grid place-items-center bg-night transition-opacity duration-700 ease-[var(--ease-out-quart)]"
-            style={{ opacity: ready ? 0 : 1 }}
+            style={{ opacity: go ? 0 : 1 }}
             role="status"
-            aria-live="polite"
           >
-            <div className="flex flex-col items-center gap-6">
-              <FourPoints lit={ready ? 4 : 2} size={12} />
-              <p className="font-display text-[11px] font-bold tracking-[0.42em] text-drl-dim">IGNITION</p>
-            </div>
+            <RaceLoader progress={loaded} done={ready} onGo={() => setGo(true)} />
           </div>
         )}
 

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, ArrowUpRight, Bookmark, Phone, X } from "lucide-react";
 import { PorscheMark } from "@/components/PorscheMark";
+import { lockPageScroll } from "@/components/SmoothScroll";
 import { dealership } from "@/data/dealership";
 import { departmentStatus } from "@/lib/hours";
 import { DOCK_END, range, story } from "@/lib/story";
@@ -38,6 +39,7 @@ const menuLinks = [
   { href: "/studio", label: "Protection Studio", note: "Paint, film, tint and coat on a live 911" },
   { href: "#film", label: "Film", note: "GTS, Turbo S, GT3 RS and Macan in motion" },
   { href: "#lineup", label: "Models", note: "911, 718, Taycan, Panamera, Macan, Cayenne" },
+  { href: "#reels", label: "Reels", note: "Films from our showroom and from creators" },
   { href: "#motorsport", label: "Motorsport", note: "Victory at Petit Le Mans" },
   { href: "#legends", label: "Legends", note: "918 Spyder, Carrera GT, 919 Hybrid and more" },
   { href: "#history", label: "Heritage", note: "From the 356 to the Taycan" },
@@ -52,6 +54,12 @@ function Menu({ open, onClose }: { open: boolean; onClose: () => void }) {
   useEffect(() => {
     setStatus(departmentStatus(dealership.departments[0]).label);
   }, []);
+  // the page behind stays put while the menu is open
+  useEffect(() => {
+    if (!open) return;
+    lockPageScroll(true);
+    return () => lockPageScroll(false);
+  }, [open]);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -67,15 +75,18 @@ function Menu({ open, onClose }: { open: boolean; onClose: () => void }) {
           role="dialog"
           aria-modal="true"
           aria-label="Menu"
-          className="fixed inset-0 z-[60] overflow-y-auto"
+          data-lenis-prevent
+          className="fixed inset-0 z-[60] overflow-y-auto overscroll-contain bg-[#05070c]"
           initial={reduce ? { opacity: 0 } : { clipPath: "inset(0 0 100% 0)" }}
           animate={reduce ? { opacity: 1 } : { clipPath: "inset(0 0 0% 0)" }}
           exit={reduce ? { opacity: 0 } : { clipPath: "inset(0 0 100% 0)" }}
           transition={{ duration: 0.7, ease }}
         >
-          <div className="absolute inset-0 bg-[#05070c]/92 backdrop-blur-2xl" />
-          <div aria-hidden className="pointer-events-none absolute -left-40 top-1/3 h-[520px] w-[520px] rounded-full bg-[#e8102a]/20 blur-[120px]" />
-          <div aria-hidden className="pointer-events-none absolute -right-32 bottom-0 h-[460px] w-[460px] rounded-full bg-[#0098c9]/15 blur-[120px]" />
+          {/* solid, and pinned to the screen: nothing behind the menu shows through, however far the list scrolls */}
+          <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
+            <div className="absolute -left-40 top-1/3 h-[520px] w-[520px] rounded-full bg-[#e8102a]/20 blur-[120px]" />
+            <div className="absolute -right-32 bottom-0 h-[460px] w-[460px] rounded-full bg-[#0098c9]/15 blur-[120px]" />
+          </div>
           <div className="relative mx-auto flex min-h-full max-w-[1400px] flex-col px-5 pb-10 pt-5 sm:px-8">
             <div className="flex h-12 items-center justify-between">
               <button

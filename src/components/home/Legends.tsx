@@ -25,14 +25,15 @@ function LegendMedia({ l, active }: { l: Legend; active: boolean }) {
         imgClassName="transition-transform duration-[1200ms] ease-[var(--ease-out-expo)] group-hover:scale-[1.04]"
       />
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_55%,rgb(12_17_27/.7))]" />
-      {m.loop && (
+      {(m.loop || m.studio) && (
         <span aria-hidden className="glass-dark absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold text-white">
-          <Play size={11} className="fill-current" /> Film
-        </span>
-      )}
-      {m.studio && (
-        <span aria-hidden className="glass-dark absolute right-4 top-4 rounded-full px-2.5 py-1 text-[12px] font-semibold text-white">
-          Rendered in our studio
+          {m.studio && !(active && m.loop) ? (
+            "Rendered in our studio"
+          ) : (
+            <>
+              <Play size={11} className="fill-current" /> {m.studio ? "Filmed in our showroom" : "Film"}
+            </>
+          )}
         </span>
       )}
     </div>

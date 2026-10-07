@@ -7,6 +7,7 @@ import { History } from "@/components/home/History";
 import { Legends } from "@/components/home/Legends";
 import { FilmBand } from "@/components/home/FilmBand";
 import { Motorsport } from "@/components/home/Motorsport";
+import { Reels } from "@/components/home/Reels";
 import { Buying, Service, StudioModes, Visit } from "@/components/home/Sections";
 import { Footer } from "@/components/home/Footer";
 import { CursorLamp } from "@/components/fx/CursorLamp";
@@ -24,6 +25,7 @@ export default function Home() {
         <LedTicker />
         <FilmBand />
         <Lineup />
+        <Reels />
         <Motorsport />
         <Legends />
         <Heritage />

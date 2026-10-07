@@ -34,3 +34,87 @@ export const petitLeMans = {
 export const mediaCredit = {
   newsroom: "https://newsroom.porsche.com",
 };
+
+/**
+ * Short films for the reels strip, all 4:5 and muted. Showroom films come from the store's Instagram; creator films
+ * are shown with each creator's permission, obtained by the store. Every cut is car-only, with platform watermarks
+ * cropped out.
+ */
+export type Reel = {
+  id: string;
+  title: string;
+  src: string;
+  poster: string;
+  source: "showroom" | "creator";
+  cgi?: boolean;
+  handle: string;
+  platform: "Instagram" | "TikTok";
+  url: string;
+};
+
+const IG = "https://www.instagram.com/porschewalnutcreek/";
+
+export const reels: Reel[] = [
+  {
+    id: "gts",
+    title: "911 Carrera GTS",
+    src: "/media/creator-brannon.mp4",
+    poster: "/media/creator-brannon.jpg",
+    source: "creator",
+    handle: "brannoncjackson",
+    platform: "TikTok",
+    url: "https://www.tiktok.com/@brannoncjackson",
+  },
+  {
+    id: "st",
+    title: "911 S/T",
+    src: "/media/showroom-911-m.mp4",
+    poster: "/media/showroom-911-m.jpg",
+    source: "showroom",
+    handle: "porschewalnutcreek",
+    platform: "Instagram",
+    url: IG,
+  },
+  {
+    id: "tunnel",
+    title: "Tunnel run",
+    src: "/media/creator-lxck.mp4",
+    poster: "/media/creator-lxck.jpg",
+    source: "creator",
+    cgi: true,
+    handle: "lxck.render",
+    platform: "TikTok",
+    url: "https://www.tiktok.com/@lxck.render",
+  },
+  {
+    id: "macan",
+    title: "Macan GTS Electric",
+    src: "/media/showroom-macan-m.mp4",
+    poster: "/media/showroom-macan-m.jpg",
+    source: "showroom",
+    handle: "porschewalnutcreek",
+    platform: "Instagram",
+    url: IG,
+  },
+  {
+    id: "forest",
+    title: "Forest light",
+    src: "/media/creator-hitte69.mp4",
+    poster: "/media/creator-hitte69.jpg",
+    source: "creator",
+    cgi: true,
+    handle: "hitte69",
+    platform: "TikTok",
+    url: "https://www.tiktok.com/@hitte69",
+  },
+  {
+    id: "gt3",
+    title: "911 GT3",
+    src: "/media/showroom-gt3-m.mp4",
+    poster: "/media/showroom-gt3-m.jpg",
+    source: "showroom",
+    handle: "porschewalnutcreek",
+    platform: "Instagram",
+    url: IG,
+  },
+];

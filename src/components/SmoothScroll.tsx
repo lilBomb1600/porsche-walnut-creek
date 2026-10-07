@@ -8,6 +8,15 @@ import { story } from "@/lib/story";
 
 gsap.registerPlugin(ScrollTrigger);
 
+let active: Lenis | null = null;
+
+/** Freezes the page behind a full-screen overlay such as the menu, for wheel and touch alike. */
+export function lockPageScroll(locked: boolean) {
+  document.documentElement.style.overflow = locked ? "hidden" : "";
+  if (locked) active?.stop();
+  else active?.start();
+}
+
 /** Lenis smooth scroll driving GSAP's ScrollTrigger from one ticker. Off for reduced motion. */
 export function SmoothScroll() {
   useEffect(() => {
@@ -22,6 +31,7 @@ export function SmoothScroll() {
       return () => window.removeEventListener("scroll", updatePage);
     }
     const lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
+    active = lenis;
     lenis.on("scroll", () => {
       ScrollTrigger.update();
       updatePage();
@@ -44,6 +54,7 @@ export function SmoothScroll() {
       document.removeEventListener("click", onClick);
       gsap.ticker.remove(tick);
       lenis.destroy();
+      active = null;
     };
   }, []);
   return null;

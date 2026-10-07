@@ -1,4 +1,5 @@
 import { dealership } from "./dealership";
+import type { Loop } from "@/components/media/MotionPhoto";
 
 const O = dealership.official;
 
@@ -14,8 +15,10 @@ export type ModelLine = {
   /** Base MSRP as porsche.com/usa shows it; null when the line isn't taking new orders. */
   from: number | null;
   photo: { src: string; position?: string; alt: string };
-  /** Porsche's card film for the line (5:4), played while the card is pointed at. */
-  loop: { src: string; poster: string };
+  /** Porsche's card film for the line (5:4). */
+  loop: Loop;
+  /** Our own showroom film of the line, when we have one. It plays first; a click switches to Porsche's film. */
+  showroom?: Loop & { car: string };
   /** Official model signature, with its viewBox size so every name renders at one shared scale. */
   signature: { src: string; w: number; h: number };
   newUrl: string;
@@ -38,6 +41,7 @@ export const lineup: ModelLine[] = [
     from: 135500,
     photo: { src: "/media/911-gts.jpg", position: "62% 60%", alt: "Porsche 911 Carrera GTS in dark grey on a mountain road at sunset" },
     loop: { src: "/media/card-911.mp4", poster: "/media/card-911.jpg" },
+    showroom: { src: "/media/showroom-911.mp4", small: "/media/showroom-911-m.mp4", poster: "/media/showroom-911.jpg", car: "911 S/T" },
     signature: { src: "/media/signatures/911.svg", w: 94, h: 25 },
     newUrl: `${O}/new-vehicles/911-2/`,
     usedUrl: `${O}/used-vehicles/911-2/`,
@@ -90,6 +94,7 @@ export const lineup: ModelLine[] = [
     from: 65400,
     photo: { src: "/media/macan.jpg", position: "62% 62%", alt: "Porsche Macan Electric in dark purple on a desert road" },
     loop: { src: "/media/card-macan.mp4", poster: "/media/card-macan.jpg" },
+    showroom: { src: "/media/showroom-macan.mp4", small: "/media/showroom-macan-m.mp4", poster: "/media/showroom-macan.jpg", car: "Macan GTS Electric" },
     signature: { src: "/media/signatures/macan.svg", w: 196, h: 26 },
     newUrl: `${O}/new-vehicles/macan/`,
     usedUrl: `${O}/used-vehicles/macan/`,

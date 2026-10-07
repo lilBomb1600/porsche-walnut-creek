@@ -3,7 +3,7 @@
 import * as THREE from "three";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { PerformanceMonitor } from "@react-three/drei";
+import { PerformanceMonitor, useProgress } from "@react-three/drei";
 import { CarModel, defaultRig, type CarRig } from "./CarModel";
 import { Effects, Stage } from "./Stage";
 import { vltToDark } from "./materials";
@@ -76,10 +76,11 @@ function Director({ rig }: { rig: React.RefObject<CarRig> }) {
   useFrame((_, dt) => {
     const r = rig.current;
     const now = performance.now();
-    if (story.introStart < 0) story.introStart = now;
-    story.intro = story.reduced ? 1 : Math.min(1, (now - story.introStart) / INTRO_MS);
+    // the intro starts on the loader's green light
+    if (story.introStart < 0 && story.ready) story.introStart = now;
+    story.intro = story.reduced ? 1 : story.introStart < 0 ? 0 : Math.min(1, (now - story.introStart) / INTRO_MS);
     // scrolling during the intro finishes it
-    if (story.p > 0.004 && story.intro < 1) story.introStart = now - INTRO_MS;
+    if (story.p > 0.004 && story.intro < 1 && story.introStart >= 0) story.introStart = now - INTRO_MS;
     const it = story.intro;
     const p = story.p;
 
@@ -227,7 +228,22 @@ function ReadyFlag({ onReady }: { onReady: () => void }) {
   return null;
 }
 
-export default function HeroScene({ onReady, active = true }: { onReady: () => void; active?: boolean }) {
+/** Reports the share of files loaded so far (0..1), for the page loader. */
+function LoadProgress({ onProgress }: { onProgress: (p: number) => void }) {
+  const progress = useProgress((s) => s.progress);
+  useEffect(() => onProgress(progress / 100), [progress, onProgress]);
+  return null;
+}
+
+export default function HeroScene({
+  onReady,
+  onProgress,
+  active = true,
+}: {
+  onReady: () => void;
+  onProgress?: (p: number) => void;
+  active?: boolean;
+}) {
   const spec = carById("911");
   const rig = useRef<CarRig>(defaultRig({ paint: RED.hex, drl: 0, tail: 0, reveal: 0 }));
   const [quality, setQuality] = useState<"high" | "low">("high");
@@ -236,25 +252,28 @@ export default function HeroScene({ onReady, active = true }: { onReady: () => v
     if (window.matchMedia("(max-width: 700px)").matches) setQuality("low");
   }, []);
   return (
-    <Canvas
-      shadows
-      frameloop={active ? "always" : "never"}
-      dpr={quality === "high" ? [1, 1.6] : [1, 1.25]}
-      camera={{ position: [-3.2, 0.62, 4.3], fov: 30, near: 0.1, far: 80 }}
-      gl={{ antialias: false, powerPreference: "high-performance" }}
-      onCreated={({ gl }) => {
-        gl.outputColorSpace = THREE.SRGBColorSpace;
-      }}
-      aria-hidden
-    >
-      <PerformanceMonitor onDecline={() => setQuality("low")} />
-      <Suspense fallback={null}>
-        <Stage scene="night" quality={quality} cursor />
-        <CarModel spec={spec} rig={rig} />
-        <Effects quality={quality} bloom={0.4} />
-        <ReadyFlag onReady={onReady} />
-        <Director rig={rig} />
-      </Suspense>
-    </Canvas>
+    <>
+      {onProgress && <LoadProgress onProgress={onProgress} />}
+      <Canvas
+        shadows
+        frameloop={active ? "always" : "never"}
+        dpr={quality === "high" ? [1, 1.6] : [1, 1.25]}
+        camera={{ position: [-3.2, 0.62, 4.3], fov: 30, near: 0.1, far: 80 }}
+        gl={{ antialias: false, powerPreference: "high-performance" }}
+        onCreated={({ gl }) => {
+          gl.outputColorSpace = THREE.SRGBColorSpace;
+        }}
+        aria-hidden
+      >
+        <PerformanceMonitor onDecline={() => setQuality("low")} />
+        <Suspense fallback={null}>
+          <Stage scene="night" quality={quality} cursor />
+          <CarModel spec={spec} rig={rig} />
+          <Effects quality={quality} bloom={0.4} />
+          <ReadyFlag onReady={onReady} />
+          <Director rig={rig} />
+        </Suspense>
+      </Canvas>
+    </>
   );
 }

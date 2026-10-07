@@ -110,7 +110,8 @@ export function Footer() {
             <a href={mediaCredit.newsroom} target="_blank" rel="noopener noreferrer" className="underline decoration-[var(--line-2)] hover:text-drl">
               the Porsche Newsroom
             </a>
-            , used with approval. Studio backdrops and textures generated with Higgsfield.
+            , used with approval. Showroom films: Porsche Walnut Creek. Creator films by @brannoncjackson, @lxck.render and @hitte69
+            on TikTok, shown with permission. Studio backdrops and textures generated with Higgsfield.
           </p>
         </div>
       </div>

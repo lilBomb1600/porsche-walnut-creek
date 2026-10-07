@@ -147,7 +147,14 @@ export const legends: Legend[] = [
     ],
     story: "No turbos, no hybrid, a nine-thousand-rpm redline. The purist's 911.",
     color: "#e0501c",
-    media: { src: "/media/gt3-studio.jpg", alt: "911 GT3 rendered in the Protection Studio", position: "50% 58%", studio: "/studio?car=gt3" },
+    media: {
+      src: "/media/gt3-studio.jpg",
+      alt: "911 GT3 rendered in the Protection Studio",
+      position: "50% 58%",
+      studio: "/studio?car=gt3",
+      // the real one, on our showroom floor
+      loop: { src: "/media/showroom-gt3.mp4", poster: "/media/showroom-gt3.jpg" },
+    },
   },
   {
     id: "919",
