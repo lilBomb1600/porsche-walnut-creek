@@ -3,6 +3,17 @@
  * Source films live on newstv.porsche.com; the reel and loops are short muted cuts of them.
  */
 
+/**
+ * The opening film: Porsche's "Heart Rates Rising at Nürburgring" (911 GT3 R race footage, newstv 282408) cut hard
+ * against four shots generated with Higgsfield Seedance 2.0 from approved Newsroom photos (GT3 RS, Taycan Turbo GT,
+ * 718 Cayman GT4 RS, 911 Turbo S). Three encodes: desktop, laptop and a vertical phone cut.
+ */
+export const heroFilm = {
+  full: { src: "/media/hero.mp4", poster: "/media/hero.jpg" },
+  medium: { src: "/media/hero-720.mp4", poster: "/media/hero.jpg" },
+  phone: { src: "/media/hero-phone.mp4", poster: "/media/hero-phone.jpg" },
+};
+
 export const reel = {
   src: "/media/reel.mp4",
   small: "/media/reel-720.mp4",

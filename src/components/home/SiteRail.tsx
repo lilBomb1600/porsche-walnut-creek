@@ -9,7 +9,7 @@ import { PorscheMark } from "@/components/PorscheMark";
 import { lockPageScroll } from "@/components/SmoothScroll";
 import { dealership } from "@/data/dealership";
 import { departmentStatus } from "@/lib/hours";
-import { DOCK_END, range, story } from "@/lib/story";
+import { range, story } from "@/lib/story";
 import { useRaf } from "@/lib/use-raf";
 
 function UsFlag() {
@@ -184,7 +184,7 @@ export function SiteRail() {
   const header = useRef<HTMLElement>(null);
   const lit = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const st = useRef({ prog: 0, solid: 0, last: 0 });
+  const st = useRef({ prog: 0, solid: 0, op: 0, last: 0 });
 
   useRaf((now) => {
     const s = st.current;
@@ -192,10 +192,12 @@ export function SiteRail() {
     s.last = now;
     const k = 1 - Math.exp(-dt * 8);
     s.prog += (story.pageP - s.prog) * k;
-    s.solid += (range(story.p, 0.01, DOCK_END) - s.solid) * k;
+    // clear over the opening film, dark glass once the page moves past it
+    s.solid += (range(window.scrollY / window.innerHeight, 0.55, 0.95) - s.solid) * k;
+    s.op += ((story.loaded || story.reduced ? 1 : 0) - s.op) * k;
     const h = header.current;
     if (h) {
-      const op = story.reduced ? 1 : range(story.intro, 0.86, 1);
+      const op = s.op;
       h.style.opacity = String(op);
       h.style.transform = `translate3d(0, ${(1 - op) * -16}px, 0)`;
       h.style.pointerEvents = op > 0.5 ? "auto" : "none";

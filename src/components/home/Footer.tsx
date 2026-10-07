@@ -111,7 +111,8 @@ export function Footer() {
               the Porsche Newsroom
             </a>
             , used with approval. Showroom films: Porsche Walnut Creek. Creator films by @brannoncjackson, @lxck.render and @hitte69
-            on TikTok, shown with permission. Studio backdrops and textures generated with Higgsfield.
+            on TikTok, shown with permission. The opening film cuts Porsche's Nürburgring 24 Hours footage with shots generated in
+            Higgsfield from Porsche photography. Studio backdrops and textures generated with Higgsfield.
           </p>
         </div>
       </div>

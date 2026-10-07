@@ -1,6 +1,7 @@
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { SiteRail } from "@/components/home/SiteRail";
 import { HomeStory } from "@/components/home/HomeStory";
+import { VideoHero } from "@/components/home/VideoHero";
 import { Lineup } from "@/components/home/Lineup";
 import { Heritage } from "@/components/home/Heritage";
 import { History } from "@/components/home/History";
@@ -20,12 +21,13 @@ export default function Home() {
       <SiteRail />
       <CursorLamp />
       <main>
+        <VideoHero />
+        <LedTicker />
+        <Lineup />
         <HomeStory />
         <StudioModes />
-        <LedTicker />
-        <FilmBand />
-        <Lineup />
         <Reels />
+        <FilmBand />
         <Motorsport />
         <Legends />
         <Heritage />

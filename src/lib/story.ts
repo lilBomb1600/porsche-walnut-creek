@@ -3,7 +3,8 @@
  * never through React state, so the 3D scene and the DOM rail stay frame-locked without re-renders.
  */
 export const story = {
-  ready: false,
+  loaded: false, // the page loader has given the green light
+  ready: false, // the studio section is in view and its 3D intro may start
   reduced: false,
   introStart: -1, // performance.now() when the ignition intro began
   intro: 0, // 0..1

@@ -5,13 +5,9 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowRight } from "lucide-react";
-import { PorscheWordmark } from "@/components/PorscheMark";
 import { LampLink } from "@/components/ui/lamp";
-import { dealership } from "@/data/dealership";
-import { departmentStatus } from "@/lib/hours";
 import { DOCK_END, beats, range, story } from "@/lib/story";
 import { useRaf } from "@/lib/use-raf";
-import { RaceLoader } from "./RaceLoader";
 
 const HeroScene = dynamic(() => import("@/three/HeroScene"), { ssr: false });
 
@@ -41,36 +37,12 @@ const captions: Record<(typeof beats)[number]["id"], { title: string; body: stri
   },
 };
 
-function OpenNow() {
-  const [label, setLabel] = useState<string | null>(null);
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    const st = departmentStatus(dealership.departments[0]);
-    setLabel(st.label);
-    setOpen(st.open);
-  }, []);
-  if (!label) return null;
-  return (
-    <p className="flex items-center gap-2.5 text-[13.5px] font-medium text-drl-2">
-      <span
-        aria-hidden
-        className="block h-2 w-2 rounded-full"
-        style={open ? { background: "#eef4ff", boxShadow: "0 0 10px #eef4ff" } : { background: "rgb(238 244 255 / .25)" }}
-      />
-      {label} · {dealership.address.street}
-    </p>
-  );
-}
-
 export function HomeStory() {
   const section = useRef<HTMLElement>(null);
   const [ready, setReady] = useState(false);
-  const [loaderGone, setLoaderGone] = useState(false);
-  const [loaded, setLoaded] = useState(0);
-  const [go, setGo] = useState(false);
+  const [coverGone, setCoverGone] = useState(false);
+  const [inView, setInView] = useState(false);
   const [active, setActive] = useState(true);
-  const [lit, setLit] = useState(false);
-  const litRef = useRef(false);
   const hero = useRef<HTMLDivElement>(null);
   const capRefs = useRef<(HTMLDivElement | null)[]>([]);
   const segRefs = useRef<(HTMLSpanElement | null)[]>([]);
@@ -94,21 +66,22 @@ export function HomeStory() {
     };
   }, []);
 
-  // The hero's intro waits for the green light, so it plays as the loader lifts, not behind it.
+  // The studio's opening orbit waits until the section is actually on screen and the car has loaded.
   useEffect(() => {
-    if (!go) return;
+    const io = new IntersectionObserver(([e]) => e.isIntersecting && setInView(true), { rootMargin: "0px 0px -35% 0px" }); // the section is six screens tall: watch its top edge
+    io.observe(section.current!);
+    return () => io.disconnect();
+  }, []);
+  useEffect(() => {
+    if (!ready || !inView) return;
     story.ready = true;
-    const t = setTimeout(() => setLoaderGone(true), 800);
+    const t = setTimeout(() => setCoverGone(true), 800);
     return () => clearTimeout(t);
-  }, [go]);
+  }, [ready, inView]);
 
   useRaf(() => {
     const p = story.p;
     const it = story.intro;
-    if (!litRef.current && it > 0.88) {
-      litRef.current = true;
-      setLit(true);
-    }
     if (hero.current) {
       const inOp = story.reduced ? 1 : range(it, 0.86, 0.95);
       const outOp = 1 - range(p, 0.015, DOCK_END * 0.8);
@@ -159,37 +132,31 @@ export function HomeStory() {
   });
 
   return (
-    <section ref={section} id="top" className="relative h-[620vh]" aria-label="Porsche Walnut Creek">
+    <section ref={section} id="studio-story" className="relative h-[620vh]" aria-label="The Protection Studio">
       <div className="sticky top-0 h-[100dvh] overflow-hidden">
         <div className="absolute inset-0">
-          <HeroScene active={active} onReady={() => setReady(true)} onProgress={setLoaded} />
+          <HeroScene active={active} onReady={() => setReady(true)} />
         </div>
 
-        {/* race-track loader */}
-        {!loaderGone && (
+        {/* plain cover until the car is ready */}
+        {!coverGone && (
           <div
-            className="absolute inset-0 z-20 grid place-items-center bg-night transition-opacity duration-700 ease-[var(--ease-out-quart)]"
-            style={{ opacity: go ? 0 : 1 }}
-            role="status"
-          >
-            <RaceLoader progress={loaded} done={ready} onGo={() => setGo(true)} />
-          </div>
+            aria-hidden
+            className="absolute inset-0 z-20 bg-night transition-opacity duration-700 ease-[var(--ease-out-quart)]"
+            style={{ opacity: ready && inView ? 0 : 1 }}
+          />
         )}
 
-        {/* hero copy, under the light band */}
+        {/* studio intro, under the light band */}
         <div
           ref={hero}
           className="absolute inset-x-0 bottom-0 z-10 px-5 pb-[max(28px,5vh)] opacity-0 sm:px-8 lg:px-12"
           style={{ visibility: "hidden" }}
         >
           <div className="max-w-[1400px]">
-            <h1 className="sr-only">Porsche Walnut Creek</h1>
-            <div aria-hidden data-lit={lit} className="max-w-[min(680px,84vw)]">
-              <div className="hero-mark">
-                <PorscheWordmark className="h-auto w-full text-white drop-shadow-[0_0_30px_rgb(170_200_255/.25)]" />
-              </div>
-              <p className="hero-sub font-mark-caps mt-[clamp(12px,1.6vw,22px)] text-[clamp(11px,1.5vw,18px)] text-white/85">Walnut Creek</p>
-            </div>
+            <h2 className="font-livery max-w-[14ch] text-[clamp(40px,6.4vw,96px)] leading-[0.95] text-white text-balance [text-shadow:0_2px_30px_rgb(0_0_0/.45)]">
+              The Protection Studio.
+            </h2>
             <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <p className="max-w-[46ch] text-[16px] leading-relaxed text-drl-2 sm:text-[17px] text-pretty">
                 See your Porsche in its best light. Pick the paint, wrap it in film, tint it and coat it on a live 911 before
@@ -199,13 +166,10 @@ export function HomeStory() {
                 <LampLink href="/studio">
                   Build your protection <ArrowRight size={17} />
                 </LampLink>
-                <LampLink href={dealership.links.newInventory} tone="ghost">
-                  Shop inventory
+                <LampLink href="/studio?mode=showroom" tone="ghost">
+                  Showroom mode
                 </LampLink>
               </div>
-            </div>
-            <div className="mt-6">
-              <OpenNow />
             </div>
           </div>
         </div>
