@@ -43,6 +43,7 @@ const menuLinks = [
   { href: "#motorsport", label: "Motorsport", note: "Victory at Petit Le Mans" },
   { href: "#legends", label: "Legends", note: "918 Spyder, Carrera GT, 919 Hybrid and more" },
   { href: "#history", label: "Heritage", note: "From the 356 to the Taycan" },
+  { href: "#restoration", label: "Restoration", note: "Boden brings back a 1999 Boxster, in seven episodes" },
   { href: "#service", label: "Service", note: "Certified technicians, OEM parts, tires" },
   { href: "#buying", label: "Buying", note: "Porsche Approved, finance, trade-in" },
   { href: "#visit", label: "Visit", note: dealership.address.oneLine },
