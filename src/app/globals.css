@@ -402,3 +402,31 @@ a {
 @media (min-width: 1280px) {
   .model-signature { --sig-k: 1.5; }
 }
+
+/* Sideways rows you swipe or drag yourself; they snap card to card and leave vertical scrolling to the page. */
+@layer components {
+  .swipe-rail {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    cursor: grab;
+  }
+  .swipe-rail::-webkit-scrollbar {
+    display: none;
+  }
+  .swipe-rail > * {
+    scroll-snap-align: start;
+  }
+  .swipe-rail[data-dragging="true"] {
+    scroll-snap-type: none;
+    cursor: grabbing;
+    user-select: none;
+  }
+  .swipe-rail:focus-visible {
+    outline: 2px solid rgb(238 244 255 / 0.5);
+    outline-offset: 4px;
+  }
+}
