@@ -1,4 +1,6 @@
 import { SmoothScroll } from "@/components/SmoothScroll";
+import { pageMetadata } from "@/lib/seo/metadata";
+import { HOME_DESCRIPTION, HOME_TITLE } from "@/lib/seo/pages";
 import { SiteRail } from "@/components/home/SiteRail";
 import { HomeStory } from "@/components/home/HomeStory";
 import { VideoHero } from "@/components/home/VideoHero";
@@ -14,6 +16,8 @@ import { Buying, Service, StudioModes, Visit } from "@/components/home/Sections"
 import { Footer } from "@/components/home/Footer";
 import { CursorLamp } from "@/components/fx/CursorLamp";
 import { LedTicker } from "@/components/fx/LedTicker";
+
+export const metadata = pageMetadata({ title: HOME_TITLE, description: HOME_DESCRIPTION, path: "/" });
 
 export default function Home() {
   return (

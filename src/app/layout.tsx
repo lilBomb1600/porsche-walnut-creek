@@ -1,4 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import { JsonLd } from "@/components/JsonLd";
+import { dealership } from "@/data/dealership";
+import { SITE_URL } from "@/lib/seo/env";
+import { WEBSITE_ID, jsonLdGraph } from "@/lib/seo/jsonld";
+import { rootMetadata } from "@/lib/seo/metadata";
+import { HOME_DESCRIPTION, HOME_TITLE } from "@/lib/seo/pages";
 import { Archivo, Michroma, Mona_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -24,17 +30,21 @@ const mona = Mona_Sans({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Porsche Walnut Creek | Paint, protection and the 911, lit up",
-  description:
-    "Porsche Walnut Creek at 2555 N Main St. Build your paint protection on a live 3D 911, then shop new, Porsche Approved and pre-owned, or book service. Concept site by Arman Digital.",
-  metadataBase: new URL("https://porsche-walnut-creek.vercel.app"),
-  openGraph: {
-    title: "Porsche Walnut Creek",
-    description: "Paint, film, tint and ceramic on a live 3D 911. Concept site by Arman Digital.",
-    type: "website",
-  },
-};
+export const metadata: Metadata = rootMetadata({ title: HOME_TITLE, description: HOME_DESCRIPTION });
+
+/**
+ * Unofficial concept for a real dealer: no LocalBusiness/AutoDealer node, only a WebSite node that says what it is
+ * (same words as the footer). Never present this as the dealer's official site.
+ */
+const conceptJsonLd = jsonLdGraph({
+  "@type": "WebSite",
+  "@id": WEBSITE_ID,
+  url: `${SITE_URL}/`,
+  name: `${dealership.name} (independent concept)`,
+  description: "Independent concept site designed and built by Arman Digital.",
+  inLanguage: "en",
+  creator: { "@type": "Organization", name: "Arman Digital", url: "https://arman-digital.vercel.app" },
+});
 
 export const viewport: Viewport = {
   themeColor: "#07090e",
@@ -55,6 +65,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${archivo.variable} ${michroma.variable} ${mona.variable} antialiased`}>
       <body>
         <div hidden aria-hidden dangerouslySetInnerHTML={{ __html: CONTRACT }} />
+        <JsonLd data={conceptJsonLd} />
         {children}
       </body>
     </html>
